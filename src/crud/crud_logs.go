@@ -10,41 +10,39 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/models"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/models"
 )
 
-type TransactionModel struct {
+type LogModel struct {
 	mongoConn        *MongoConn
-	WriteChan        chan *models.Transaction
+	WriteChan        chan *models.Log
 }
 
-var transactionModelInstance *TransactionModel
-var transactionModelOnce sync.Once
+var logModelInstance *LogModel
+var logModelOnce sync.Once
 
-func GetTransactionModel() *TransactionModel {
-	transactionModelOnce.Do(func() {
-		transactionModelInstance = &TransactionModel{
+func GetLogModel() *LogModel {
+	logModelOnce.Do(func() {
+		logModelInstance = &LogModel{
 			mongoConn:        GetMongoConn(),
-			WriteChan:        make(chan *models.Transaction, 1),
+			WriteChan:        make(chan *models.Log, 1),
 		}
 
-		transactionModelInstance.CreateNumberIndex("blocknumber", false, false)
-		transactionModelInstance.CreateStringIndex("hash")
-		transactionModelInstance.CreateStringIndex("fromaddress")
-		transactionModelInstance.CreateStringIndex("toaddress")
+		// logModelInstance.CreateNumberIndex("blocknumber", false, false)
+		// logModelInstance.CreateStringIndex("toaddress")
 	})
-	return transactionModelInstance
+	return logModelInstance
 }
 
-func (b *TransactionModel) getCollectionHandle() *mongo.Collection {
+func (b *LogModel) getCollectionHandle() *mongo.Collection {
   dbName := config.Config.DbName
   dbCollection := config.Config.DbCollection
 
   return GetMongoConn().DatabaseHandle(dbName).Collection(dbCollection)
 }
 
-func (b *TransactionModel) CreateNumberIndex(field string, isAscending bool, isUnique bool) {
+func (b *LogModel) CreateNumberIndex(field string, isAscending bool, isUnique bool) {
 	ascending := 1
 	if !isAscending {
 		ascending = -1
@@ -64,7 +62,7 @@ func (b *TransactionModel) CreateNumberIndex(field string, isAscending bool, isU
   }
 }
 
-func (b *TransactionModel) CreateStringIndex(field string) {
+func (b *LogModel) CreateStringIndex(field string) {
 
 	indexModel := mongo.IndexModel{
 		Keys:    bson.M{field: "hashed"},
@@ -79,10 +77,10 @@ func (b *TransactionModel) CreateStringIndex(field string) {
   }
 }
 
-func (b *TransactionModel) Insert(ctx context.Context, transaction *models.Transaction) error {
+func (b *LogModel) Insert(ctx context.Context, log *models.Log) error {
 
   err := backoff.Retry(func() error {
-	  _, err := b.getCollectionHandle().InsertOne(ctx, transaction)
+	  _, err := b.getCollectionHandle().InsertOne(ctx, log)
 
 		if err != nil {
 			zap.S().Info("MongoDb RetryCreate Error : ", err.Error())
@@ -94,14 +92,14 @@ func (b *TransactionModel) Insert(ctx context.Context, transaction *models.Trans
 	return err
 }
 
-func (b *TransactionModel) Select(
+func (b *LogModel) Select(
 	ctx context.Context,
 	limit int64,
 	skip int64,
 	hash string,
 	from string,
 	to string,
-) ([]models.Transaction, error) {
+) ([]models.Log, error) {
   err := b.mongoConn.retryPing(ctx)
   if err != nil {
     return nil, err
@@ -155,28 +153,28 @@ func (b *TransactionModel) Select(
 	}
 
   // convert bson to model
-  transactions := make([]models.Transaction, 0)
+  logs := make([]models.Log, 0)
   for _, r := range results {
-    transactions = append(transactions, convertBsonMToTransaction(r))
+    logs = append(logs, convertBsonMToLog(r))
   }
 
-	return transactions, nil
+	return logs, nil
 }
 
-func StartTransactionLoader() {
+func StartLogLoader() {
 
   go func() {
-    var transaction *models.Transaction
-    mongoLoaderChan := GetTransactionModel().WriteChan
+    var log *models.Log
+    mongoLoaderChan := GetLogModel().WriteChan
 
     ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
 
     for {
-      transaction = <-mongoLoaderChan
-      GetTransactionModel().Insert(ctx, transaction)
+      log = <-mongoLoaderChan
+      GetLogModel().Insert(ctx, log)
 
-      zap.S().Info("Loader: Loaded in collection Transactions - BlockNumber=", transaction.BlockNumber)
+      zap.S().Info("Loader: Loaded in collection Logs - BlockNumber=", log.BlockNumber)
     }
   }()
 }

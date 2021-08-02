@@ -3,7 +3,7 @@ package crud
 import (
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/geometry-labs/icon-transactions/models"
+	"github.com/geometry-labs/icon-logs/models"
 )
 
 func convertMapToBsonD(v map[string]interface{}) (*bson.D, error) {
@@ -19,7 +19,7 @@ func convertMapToBsonD(v map[string]interface{}) (*bson.D, error) {
 	return doc, err
 }
 
-func convertBsonMToTransaction(m bson.M) models.Transaction {
+func convertBsonMToLog(m bson.M) models.Log {
 
   // Data field may be null
   data, ok := m["data"].(string)
@@ -27,7 +27,7 @@ func convertBsonMToTransaction(m bson.M) models.Transaction {
     data = ""
   }
 
-  return models.Transaction {
+  return models.Log {
     Type: m["type"].(string),
     Version: m["version"].(string),
     FromAddress: m["fromaddress"].(string),
@@ -39,7 +39,7 @@ func convertBsonMToTransaction(m bson.M) models.Transaction {
     Nid: uint32(m["nid"].(int64)),
     Nonce: uint64(m["nonce"].(int64)),
     Hash: m["hash"].(string),
-    TransactionIndex: uint32(m["transactionindex"].(int64)),
+    LogIndex: uint32(m["logindex"].(int64)),
     BlockHash: m["blockhash"].(string),
     BlockNumber: uint64(m["blocknumber"].(int64)),
     Fee: m["fee"].(string),

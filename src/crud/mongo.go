@@ -3,16 +3,18 @@ package crud
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
+	"go.uber.org/zap"
 	"github.com/cenkalti/backoff/v4"
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/global"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"go.uber.org/zap"
-	"sync"
-	"time"
+
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/global"
 )
 
 type MongoConn struct {
