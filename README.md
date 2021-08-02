@@ -1,10 +1,10 @@
 <p align="center">
-  <h3 align="center">ICON Transactions Service</h3>
+  <h3 align="center">ICON Logs Service</h3>
 </p>
 
-![](https://img.shields.io/github/v/release/geometry-labs/icon-transactions) ![](https://github.com/geometry-labs/icon-transactions/workflows/pr-test/badge.svg?branch=main) [![codecov](https://codecov.io/gh/geometry-labs/icon-transactions/branch/main/graph/badge.svg)](https://codecov.io/gh/geometry-labs/icon-transactions) ![](https://img.shields.io/docker/pulls/geometrylabs/icon-transactions.svg) ![](https://img.shields.io/github/license/geometry-labs/icon-transactions)
+![](https://img.shields.io/github/v/release/geometry-labs/icon-logs) ![](https://github.com/geometry-labs/icon-logs/workflows/pr-test/badge.svg?branch=main) [![codecov](https://codecov.io/gh/geometry-labs/icon-logs/branch/main/graph/badge.svg)](https://codecov.io/gh/geometry-labs/icon-logs) ![](https://img.shields.io/docker/pulls/geometrylabs/icon-logs.svg) ![](https://img.shields.io/github/license/geometry-labs/icon-logs)
 
-Off chain indexer for the ICON Blockchain serving the **transactions** context of the [icon-explorer](https://github.com/geometry-labs/icon-explorer). Service is broken up into API and worker components that are run as individual docker containers. It depends on data coming in from [icon-etl](https://github.com/geometry-labs/icon-etl) over a Kafka message queue with persistence on a MongoDB database. 
+Off chain indexer for the ICON Blockchain serving the **logs** context of the [icon-explorer](https://github.com/geometry-labs/icon-explorer). Service is broken up into API and worker components that are run as individual docker containers. It depends on data coming in from [icon-etl](https://github.com/geometry-labs/icon-etl) over a Kafka message queue with persistence on a MongoDB database. 
 
 ### Endpoints 
 

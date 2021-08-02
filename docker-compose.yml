@@ -1,7 +1,7 @@
 version: "3.7"
 
 x-env: &env
-  NAME: "transactions"
+  NAME: "logs"
   NETWORK_NAME: "mainnet"
 
   # Ports
@@ -21,16 +21,16 @@ x-env: &env
   # Logging
   LOG_LEVEL: "DEBUG"
   LOG_TO_FILE: "false"
-  LOG_FILE_NAME: "transactions.log"
+  LOG_FILE_NAME: "logs.log"
   LOG_FORMAT: "string"
 
   # Kafka
   KAFKA_BROKER_URL: "kafka:9092"
   SCHEMA_REGISTRY_URL: "schemaregistry:8081"
-  KAFKA_GROUP_ID: "transactions-service"
+  KAFKA_GROUP_ID: "logs-service"
 
   # Topics
-  SCHEMA_NAME_TOPICS: "transactions-ws:transactions"
+  SCHEMA_NAME_TOPICS: "logs-ws:logs"
   SCHEMA_FOLDER_PATH: "/app/schemas/"
 
   # DB
@@ -44,10 +44,10 @@ x-env: &env
   DB_TIMEZONE: "UTC"
 
 services:
-  transactions-api:
+  logs-api:
     build:
-      context: ${TRANSACTIONS_CONTEXT:-.}
-      target: ${TRANSACTIONS_TARGET:-prod}
+      context: ${LOGS_CONTEXT:-.}
+      target: ${LOGS_TARGET:-prod}
       args:
         - SERVICE_NAME=api
     ports:
@@ -60,15 +60,15 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - ${TRANSACTIONS_CONTEXT:-.}/src:/app
+      - ${LOGS_CONTEXT:-.}/src:/app
     environment:
       <<: *env
-      CONSUMER_TOPICS: "transactions-ws"
+      CONSUMER_TOPICS: "logs-ws"
 
-  transactions-worker:
+  logs-worker:
     build:
-      context: ${TRANSACTIONS_CONTEXT:-.}
-      target: ${TRANSACTIONS_TARGET:-prod}
+      context: ${LOGS_CONTEXT:-.}
+      target: ${LOGS_TARGET:-prod}
       args:
         - SERVICE_NAME=worker
     ports:
@@ -80,8 +80,8 @@ services:
     cap_add:
       - SYS_PTRACE
     volumes:
-      - ${TRANSACTIONS_CONTEXT:-.}/src:/app
+      - ${LOGS_CONTEXT:-.}/src:/app
     environment:
       <<: *env
-      CONSUMER_TOPICS: "transactions,logs"
-      PRODUCER_TOPICS: "transactions-ws"
+      CONSUMER_TOPICS: "logs,logs"
+      PRODUCER_TOPICS: "logs-ws"
