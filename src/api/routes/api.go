@@ -2,16 +2,16 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/global"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/global"
 	"go.uber.org/zap"
 
 	swagger "github.com/arsmn/fiber-swagger/v2"
 	fiber "github.com/gofiber/fiber/v2"
 
-	_ "github.com/geometry-labs/icon-transactions/api/docs"     // import swagger docs
-	"github.com/geometry-labs/icon-transactions/api/routes/rest"
-	"github.com/geometry-labs/icon-transactions/api/routes/ws"
+	_ "github.com/geometry-labs/icon-logs/api/docs"     // import swagger docs
+	"github.com/geometry-labs/icon-logs/api/routes/rest"
+	"github.com/geometry-labs/icon-logs/api/routes/ws"
 )
 
 // @title Go api template docs
@@ -37,8 +37,8 @@ func Start() {
 	app.Get("/metadata", handlerMetadata)
 
 	// Add handlers
-	rest.TransactionsAddHandlers(app)
-	ws.TransactionsAddHandlers(app)
+	rest.LogsAddHandlers(app)
+	ws.LogsAddHandlers(app)
 
 	go app.Listen(":" + config.Config.Port)
 }

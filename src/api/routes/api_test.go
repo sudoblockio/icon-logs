@@ -4,13 +4,14 @@ package routes
 
 import (
 	"encoding/json"
-	"github.com/geometry-labs/icon-transactions/config"
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
 
 	fiber "github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
+
+  "github.com/geometry-labs/icon-logs/config"
 )
 
 func init() {

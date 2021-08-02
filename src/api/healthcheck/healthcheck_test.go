@@ -1,5 +1,3 @@
-//+build unit
-
 package healthcheck
 
 import (
@@ -8,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/api/routes"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/api/routes"
 )
 
 func init() {

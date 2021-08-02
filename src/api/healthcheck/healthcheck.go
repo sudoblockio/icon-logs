@@ -10,25 +10,24 @@ import (
 	"github.com/InVisionApp/go-health/v2/checkers"
 	"github.com/InVisionApp/go-health/v2/handlers"
 
-	"github.com/geometry-labs/icon-transactions/config"
+	"github.com/geometry-labs/icon-logs/config"
 )
 
-// TODO split API and WORKER
 func Start() {
 	// create a new health instance
 	h := health.New()
 
 	// create a couple of checks
-	transactionsCheckerURL, _ := url.Parse("http://localhost:" + config.Config.Port + "/version")
-	transactionsChecker, _ := checkers.NewHTTP(&checkers.HTTPConfig{
-		URL: transactionsCheckerURL,
+	logsCheckerURL, _ := url.Parse("http://localhost:" + config.Config.Port + "/version")
+	logsChecker, _ := checkers.NewHTTP(&checkers.HTTPConfig{
+		URL: logsCheckerURL,
 	})
 
 	// Add the checks to the health instance
 	h.AddChecks([]*health.Config{
 		{
-			Name:     "transactions-rest-check",
-			Checker:  transactionsChecker,
+			Name:     "logs-rest-check",
+			Checker:  logsChecker,
 			Interval: time.Duration(config.Config.HealthPollingInterval) * time.Second,
 			Fatal:    true,
 		},

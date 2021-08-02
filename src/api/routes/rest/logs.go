@@ -8,11 +8,11 @@ import (
 	fiber "github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/crud"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/crud"
 )
 
-type TransactionsQuery struct {
+type LogsQuery struct {
 	Limit int64 `query:"limit"`
 	Skip  int64 `query:"skip"`
 
@@ -21,17 +21,17 @@ type TransactionsQuery struct {
 	To   string `query:"to"`
 }
 
-func TransactionsAddHandlers(app *fiber.App) {
+func LogsAddHandlers(app *fiber.App) {
 
-	prefix := config.Config.RestPrefix + "/transactions"
+	prefix := config.Config.RestPrefix + "/logs"
 
-	app.Get(prefix+"/", handlerGetTransactions)
+	app.Get(prefix+"/", handlerGetLogs)
 }
 
-// Transactions
-// @Summary Get Transactions
-// @Description get historical transactions
-// @Tags Transactions
+// Logs
+// @Summary Get Logs
+// @Description get historical logs
+// @Tags Logs
 // @BasePath /api/v1
 // @Accept */*
 // @Produce json
@@ -40,13 +40,13 @@ func TransactionsAddHandlers(app *fiber.App) {
 // @Param hash query string false "find by hash"
 // @Param from query string false "find by from address"
 // @Param to query string false "find by to address"
-// @Router /api/v1/transactions [get]
-// @Success 200 {object} []models.Transaction
+// @Router /api/v1/logs [get]
+// @Success 200 {object} []models.Log
 // @Failure 422 {object} map[string]interface{}
-func handlerGetTransactions(c *fiber.Ctx) error {
-	params := new(TransactionsQuery)
+func handlerGetLogs(c *fiber.Ctx) error {
+	params := new(LogsQuery)
 	if err := c.QueryParser(params); err != nil {
-		zap.S().Warnf("Transactions Get Handler ERROR: %s", err.Error())
+		zap.S().Warnf("Logs Get Handler ERROR: %s", err.Error())
 
 		c.Status(422)
 		return c.SendString(`{"error": "could not parse query parameters"}`)
@@ -57,10 +57,10 @@ func handlerGetTransactions(c *fiber.Ctx) error {
 		params.Limit = 1
 	}
 
-	// Get Transactions
+	// Get Logs
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	transactions, err := crud.GetTransactionModel().Select(
+	logs, err := crud.GetLogModel().Select(
 		ctx,
 		params.Limit,
 		params.Skip,
@@ -71,14 +71,14 @@ func handlerGetTransactions(c *fiber.Ctx) error {
   if err != nil {
     c.Status(500)
     zap.S().Errorf("ERROR: %s", err.Error())
-    return c.SendString(`{"error": "unable to query transactions"}`)
+    return c.SendString(`{"error": "unable to query logs"}`)
   }
 
-	if len(transactions) == 0 {
+	if len(logs) == 0 {
 		// No Content
 		c.Status(204)
 	}
 
-	body, _ := json.Marshal(&transactions)
+	body, _ := json.Marshal(&logs)
 	return c.SendString(string(body))
 }

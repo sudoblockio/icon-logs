@@ -7,14 +7,14 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/geometry-labs/icon-transactions/api/healthcheck"
-	"github.com/geometry-labs/icon-transactions/api/routes"
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/global"
-	"github.com/geometry-labs/icon-transactions/kafka"
-	"github.com/geometry-labs/icon-transactions/logging"
-	"github.com/geometry-labs/icon-transactions/metrics"
-	_ "github.com/geometry-labs/icon-transactions/models" // for swagger docs
+	"github.com/geometry-labs/icon-logs/api/healthcheck"
+	"github.com/geometry-labs/icon-logs/api/routes"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/global"
+	"github.com/geometry-labs/icon-logs/kafka"
+	"github.com/geometry-labs/icon-logs/logging"
+	"github.com/geometry-labs/icon-logs/metrics"
+	_ "github.com/geometry-labs/icon-logs/models" // for swagger docs
 )
 
 func main() {

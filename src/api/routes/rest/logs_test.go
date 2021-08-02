@@ -1,10 +1,7 @@
-//+build integration
-
 package rest
 
 import (
 	"encoding/json"
-	"github.com/geometry-labs/icon-transactions/crud"
 	"io/ioutil"
 	"net/http/httptest"
 	"testing"
@@ -12,8 +9,9 @@ import (
 	fiber "github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/models"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/models"
+	"github.com/geometry-labs/icon-logs/crud"
 )
 
 func init() {
@@ -24,8 +22,8 @@ func TestHandlerGetBlocks(t *testing.T) {
 	assert := assert.New(t)
 
 	// Insert block fixtures
-	tx := &models.Transaction{}
-	crud.GetTransactionModelMongo().RetryCreate(tx)
+	tx := &models.Log{}
+	crud.GetLogModelMongo().RetryCreate(tx)
 
 	app := fiber.New()
 
@@ -41,7 +39,7 @@ func TestHandlerGetBlocks(t *testing.T) {
 	bytes, err := ioutil.ReadAll(resp.Body)
 	assert.Equal(nil, err)
 
-	var txs []models.Transaction
+	var txs []models.Log
 	err = json.Unmarshal(bytes, &txs)
 	assert.Equal(nil, err)
 

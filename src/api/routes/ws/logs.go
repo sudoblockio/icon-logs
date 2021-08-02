@@ -5,13 +5,13 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"gopkg.in/Shopify/sarama.v1"
 
-	"github.com/geometry-labs/icon-transactions/kafka"
-	"github.com/geometry-labs/icon-transactions/config"
+	"github.com/geometry-labs/icon-logs/kafka"
+	"github.com/geometry-labs/icon-logs/config"
 )
 
-func TransactionsAddHandlers(app *fiber.App) {
+func LogsAddHandlers(app *fiber.App) {
 
-	prefix := config.Config.WebsocketPrefix + "/transactions"
+	prefix := config.Config.WebsocketPrefix + "/logs"
 
 	app.Use(prefix, func(c *fiber.Ctx) error {
 		// IsWebSocketUpgrade returns true if the client
@@ -23,10 +23,10 @@ func TransactionsAddHandlers(app *fiber.App) {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get(prefix+"/", websocket.New(handlerGetTransactions(kafka.Broadcasters["transactions"])))
+	app.Get(prefix+"/", websocket.New(handlerGetLogs(kafka.Broadcasters["logs"])))
 }
 
-func handlerGetTransactions(broadcaster *kafka.TopicBroadcaster) func(c *websocket.Conn) {
+func handlerGetLogs(broadcaster *kafka.TopicBroadcaster) func(c *websocket.Conn) {
 
 	return func(c *websocket.Conn) {
 
