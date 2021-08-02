@@ -7,7 +7,7 @@ import (
 )
 
 type configType struct {
-	Name        string `envconfig:"NAME" required:"false" default:"transactions-service"`
+	Name        string `envconfig:"NAME" required:"false" default:"logs-service"`
 	NetworkName string `envconfig:"NETWORK_NAME" required:"false" default:"mainnnet"`
 
 	// Ports
@@ -33,13 +33,13 @@ type configType struct {
 	// Kafka
 	KafkaBrokerURL    string `envconfig:"KAFKA_BROKER_URL" required:"false" default:"localhost:9092"`
 	SchemaRegistryURL string `envconfig:"SCHEMA_REGISTRY_URL" required:"false" default:"localhost:8081"`
-	KafkaGroupID      string `envconfig:"KAFKA_GROUP_ID" required:"false" default:"transactions-service"`
+	KafkaGroupID      string `envconfig:"KAFKA_GROUP_ID" required:"false" default:"logs-service"`
 
 	// Topics
-	ConsumerGroup    string            `envconfig:"CONSUMER_GROUP" required:"false" default:"transactions-consumer-group"`
-	ConsumerTopics   []string          `envconfig:"CONSUMER_TOPICS" required:"false" default:"transactions"`
-	ProducerTopics   []string          `envconfig:"PRODUCER_TOPICS" required:"false" default:"transactions-ws"`
-	SchemaNameTopics map[string]string `envconfig:"SCHEMA_NAME_TOPICS" required:"false" default:"transactions-ws:transactions"`
+	ConsumerGroup    string            `envconfig:"CONSUMER_GROUP" required:"false" default:"logs-consumer-group"`
+	ConsumerTopics   []string          `envconfig:"CONSUMER_TOPICS" required:"false" default:"logs"`
+	ProducerTopics   []string          `envconfig:"PRODUCER_TOPICS" required:"false" default:"logs-ws"`
+	SchemaNameTopics map[string]string `envconfig:"SCHEMA_NAME_TOPICS" required:"false" default:"logs-ws:logs"`
 	SchemaFolderPath string            `envconfig:"SCHEMA_FOLDER_PATH" required:"false" default:"schemas/"`
 
 	// DB
@@ -49,7 +49,7 @@ type configType struct {
 	DbUser       string   `envconfig:"DB_USER" required:"false" default:"mongo"`
 	DbPassword   string   `envconfig:"DB_PASSWORD" required:"false" default:"changethis"`
 	DbName       string   `envconfig:"DB_DBNAME" required:"false" default:"local"`
-	DbCollection string   `envconfig:"DB_DBCOLLECTION" required:"false" default:"transactions"`
+	DbCollection string   `envconfig:"DB_DBCOLLECTION" required:"false" default:"logs"`
 	DbIndex      []string `envconfig:"DB_DBINDEX" required:"false" default:"fromaddress,toaddress,type"`
 	DbSslmode    string   `envconfig:"DB_SSL_MODE" required:"false" default:"disable"`
 	DbTimezone   string   `envconfig:"DB_TIMEZONE" required:"false" default:"UTC"`
@@ -67,7 +67,4 @@ func ReadEnvironment() {
 	if err != nil {
 		log.Fatalf("ERROR: envconfig - %s\n", err.Error())
 	}
-
-	//vars, _ := json.Marshal(Config)
-	//log.Printf("Config Vars: " + string(vars))
 }
