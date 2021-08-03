@@ -20,13 +20,6 @@ func convertMapToBsonD(v map[string]interface{}) (*bson.D, error) {
 }
 
 func convertBsonMToLog(m bson.M) models.Log {
-
-  // Data field may be null
-  data, ok := m["data"].(string)
-  if ok == false {
-    data = ""
-  }
-
   return models.Log {
     Type: m["type"].(string),
     LogIndex: m["logindex"].(uint64),

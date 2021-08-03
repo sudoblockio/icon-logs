@@ -1,9 +1,6 @@
 package transformers
 
 import (
-  "strings"
-  "encoding/json"
-
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/Shopify/sarama.v1"
