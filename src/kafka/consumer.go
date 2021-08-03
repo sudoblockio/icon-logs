@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 	"gopkg.in/Shopify/sarama.v1"
 
-	"github.com/geometry-labs/icon-transactions/config"
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 // StartAPIConsumers - start consumer goroutines for API config

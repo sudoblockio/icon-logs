@@ -2,11 +2,13 @@ package kafka
 
 import (
 	"encoding/binary"
+	"io/ioutil"
+
 	"github.com/cenkalti/backoff/v4"
-	"github.com/geometry-labs/icon-transactions/config"
 	"github.com/riferrei/srclient"
 	"go.uber.org/zap"
-	"io/ioutil"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 type RegisterSchemaFunc func(topic string, isKey bool, srcSchemaFile string, forceUpdate bool) (int, error)

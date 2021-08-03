@@ -2,11 +2,13 @@ package kafka
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/cenkalti/backoff/v4"
-	"github.com/geometry-labs/icon-transactions/config"
 	"go.uber.org/zap"
 	"gopkg.in/Shopify/sarama.v1"
-	"time"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 type KafkaTopicProducer struct {
@@ -26,7 +28,7 @@ func StartProducers() {
 
 	for _, t := range producer_topics {
 		// Todo: parameterize schema
-		schema := "transaction" //config.Config.SchemaNameTopics["transactions-ws"] //"transactions"
+		schema := "log" //config.Config.SchemaNameTopics["logs-ws"] //"logs"
 		_, err := RetriableRegisterSchema(RegisterSchema, t, false, schema, true)
 		if err != nil {
 			zap.S().Error(fmt.Sprintf("Error in registering schema: %s for topic: %s", schema, t))

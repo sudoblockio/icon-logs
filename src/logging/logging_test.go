@@ -1,13 +1,12 @@
-//+build unit
-
 package logging
 
 import (
-	"github.com/geometry-labs/icon-transactions/config"
 	"os"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 func TestInit(t *testing.T) {

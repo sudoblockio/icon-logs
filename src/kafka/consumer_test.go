@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/Shopify/sarama.v1"
 
-	"github.com/geometry-labs/icon-transactions/config"
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 func init() {
@@ -18,7 +18,7 @@ func init() {
 
 func TestStartAPIConsumers(t *testing.T) {
 
-	topicName := "transactions"
+	topicName := "logs"
 
 	// Mock broker
 	mockBrokerID := int32(1)
@@ -55,7 +55,7 @@ func TestStartAPIConsumers(t *testing.T) {
 
 func TestStartWorkerConsumers(t *testing.T) {
 
-	topicName := "transactions"
+	topicName := "logs"
 
 	// Mock broker
 	mockBrokerID := int32(1)

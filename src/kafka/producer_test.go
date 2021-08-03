@@ -3,12 +3,13 @@
 package kafka
 
 import (
-	"github.com/geometry-labs/icon-transactions/config"
 	"testing"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/Shopify/sarama.v1"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 func init() {
