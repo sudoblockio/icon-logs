@@ -17,32 +17,31 @@ func StartLogsTransformer() {
 }
 
 func logsTransformer() {
-  consumer_topic_name_logs := "logs"
+  consumer_topic_name := "logs"
 	producer_topic_name := "logs-ws"
 
 	// Check topic names
-	if utils.StringInSlice(consumer_topic_name_logs, config.Config.ConsumerTopics) == false {
-		zap.S().Panic("Logs Worker: no ", consumer_topic_name_logs, " topic found in CONSUMER_TOPICS=", config.Config.ConsumerTopics)
+	if utils.StringInSlice(consumer_topic_name , config.Config.ConsumerTopics) == false {
+		zap.S().Panic("Logs Worker: no ", consumer_topic_name, " topic found in CONSUMER_TOPICS=", config.Config.ConsumerTopics)
 	}
 	if utils.StringInSlice(producer_topic_name, config.Config.ProducerTopics) == false {
 		zap.S().Panic("Logs Worker: no ", producer_topic_name, " topic found in PRODUCER_TOPICS=", config.Config.ConsumerTopics)
 	}
 
-	consumer_topic_chan_logs := make(chan *sarama.ConsumerMessage)
+	consumer_topic_chan := make(chan *sarama.ConsumerMessage)
 	producer_topic_chan := kafka.KafkaTopicProducers[producer_topic_name].TopicChan
 	mongoLoaderChan := crud.GetLogModel().WriteChan
 
 	// Register consumer channel logs
-	broadcaster_output_chan_id_log := kafka.Broadcasters[consumer_topic_name_logs].AddBroadcastChannel(consumer_topic_chan_logs)
+	broadcaster_output_chan_id_log := kafka.Broadcasters[consumer_topic_name].AddBroadcastChannel(consumer_topic_chan)
 	defer func() {
-		kafka.Broadcasters[consumer_topic_name_logs].RemoveBroadcastChannel(broadcaster_output_chan_id_log)
+		kafka.Broadcasters[consumer_topic_name].RemoveBroadcastChannel(broadcaster_output_chan_id_log)
 	}()
 
 	zap.S().Debug("Logs Worker: started working")
 	for {
 		// Read from kafka
-    var consumer_topic_msg *sarama.ConsumerMessage
-    var transformedLog *models.Log
+		consumer_topic_msg := <-consumer_topic_chan
 
     // Log message from ETL
     logRaw, err := convertBytesToLogRaw(consumer_topic_msg.Value)
@@ -51,6 +50,7 @@ func logsTransformer() {
     }
 
     // Transform logic
+    var transformedLog *models.Log
     transformedLog = transformLogRaw(logRaw)
 
 		// Produce to Kafka
@@ -66,17 +66,6 @@ func logsTransformer() {
 
 		zap.S().Debug("Logs worker: last seen log #", string(consumer_topic_msg.Key))
 	}
-}
-
-func convertBytesToLogRaw(value []byte) (*models.LogRaw, error) {
-	tx := models.LogRaw{}
-
-	err := protojson.Unmarshal(value, &tx)
-	if err != nil {
-    zap.S().Panic("Error: ", err.Error(), " Value: ", string(value))
-	}
-
-	return &tx, nil
 }
 
 func convertBytesToLogRaw(value []byte) (*models.LogRaw, error) {
