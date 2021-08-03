@@ -8,11 +8,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/geometry-labs/icon-transactions/models"
+	"github.com/geometry-labs/icon-logs/models"
 )
 
 const (
-	transactionRawFixturesPath = "transactions_raw.json"
+	logRawFixturesPath = "logs_raw.json"
 )
 
 // Fixtures - slice of Fixture
@@ -27,18 +27,18 @@ func check(e error) {
 	}
 }
 
-// LoadTransactionFixtures - load transaction fixtures from disk
-func LoadTransactionFixtures() []*models.Transaction {
-	transactions := make([]*models.Transaction, 0)
+// LoadLogFixtures - load log fixtures from disk
+func LoadLogFixtures() []*models.Log {
+	logs := make([]*models.Log, 0)
 
-	fixtures, err := loadFixtures(transactionRawFixturesPath)
+	fixtures, err := loadFixtures(logRawFixturesPath)
 	check(err)
 
 	for _, fixture := range fixtures {
-		transactions = append(transactions, parseFixtureToTransaction(fixture))
+		logs = append(logs, parseFixtureToLog(fixture))
 	}
 
-	return transactions
+	return logs
 }
 
 func loadFixtures(file string) (Fixtures, error) {
@@ -72,48 +72,20 @@ func getFixtureDir() string {
 	return fixtureDir
 }
 
-func parseFixtureToTransaction(m map[string]interface{}) *models.Transaction {
+func parseFixtureToLog(m map[string]interface{}) *models.Log {
 
-  // These fields may be null
-  nonce, ok := m["nonce"].(float64)
-  if ok == false {
-    nonce = 0
-  }
-  fee, ok := m["fee"].(string)
-  if ok == false {
-    fee = ""
-  }
-  itemTimestamp, ok := m["itemtimestamp"].(string)
-  if ok == false {
-    itemTimestamp = ""
-  }
-
-  return &models.Transaction {
+  return &models.Log {
     Type: m["type"].(string),
-    Version: m["version"].(string),
-    FromAddress: m["from_address"].(string),
-    ToAddress: m["to_address"].(string),
-    Value: m["value"].(string),
-    StepLimit: m["step_limit"].(string),
-    Timestamp: m["timestamp"].(string),
-    BlockTimestamp: uint64(m["block_timestamp"].(float64)),
-    Nid: uint32(m["nid"].(float64)),
-    Nonce: uint64(nonce),
-    Hash: m["hash"].(string),
-    TransactionIndex: uint32(m["transaction_index"].(float64)),
+    LogIndex: m["log_index"].(uint64),
+    TransactionHash: m["transaction_hash"].(string),
+    TransactionIndex: m["transaction_index"].(uint32),
+    Address: m["address"].(string)
+    Data: m["data"].(string)
+    Indexed: m["indexed"].(string)
+    BlockNumber: m["block_number"].(uint64)
+    BlockTimestamp: m["block_timestamp"].(uint64)
     BlockHash: m["block_hash"].(string),
-    BlockNumber: uint64(m["block_number"].(float64)),
-    Fee: fee,
-    Signature: m["signature"].(string),
-    DataType: m["data_type"].(string),
-    Data: m["data"].(string),
-    ReceiptCumulativeStepUsed: m["receipt_cumulative_step_used"].(string),
-    ReceiptStepUsed: m["receipt_step_used"].(string),
-    ReceiptStepPrice: m["receipt_step_price"].(string),
-    ReceiptScoreAddress: m["receipt_score_address"].(string),
-    ReceiptLogs: m["receipt_logs"].(string),
-    ReceiptStatus: uint32(m["receipt_status"].(float64)),
     ItemId: m["item_id"].(string),
-    ItemTimestamp: itemTimestamp,
+    ItemTimestamp: m["item_timestamp"].(string),
   }
 }
