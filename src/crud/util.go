@@ -29,29 +29,15 @@ func convertBsonMToLog(m bson.M) models.Log {
 
   return models.Log {
     Type: m["type"].(string),
-    Version: m["version"].(string),
-    FromAddress: m["fromaddress"].(string),
-    ToAddress: m["toaddress"].(string),
-    Value: m["value"].(string),
-    StepLimit: m["steplimit"].(string),
-    Timestamp: m["timestamp"].(string),
-    BlockTimestamp: uint64(m["blocktimestamp"].(int64)),
-    Nid: uint32(m["nid"].(int64)),
-    Nonce: uint64(m["nonce"].(int64)),
-    Hash: m["hash"].(string),
-    LogIndex: uint32(m["logindex"].(int64)),
+    LogIndex: m["logindex"].(uint64),
+    TransactionHash: m["transactionhash"].(string),
+    TransactionIndex: m["transactionindex"].(uint32),
+    Address: m["address"].(string)
+    Data: m["data"].(string)
+    Indexed: m["indexed"].(string)
+    BlockNumber: m["blocknumber"].(uint64)
+    BlockTimestamp: m["blocktimestamp"].(uint64)
     BlockHash: m["blockhash"].(string),
-    BlockNumber: uint64(m["blocknumber"].(int64)),
-    Fee: m["fee"].(string),
-    Signature: m["signature"].(string),
-    DataType: m["datatype"].(string),
-    Data: data,
-    ReceiptCumulativeStepUsed: m["receiptcumulativestepused"].(string),
-    ReceiptStepUsed: m["receiptstepused"].(string),
-    ReceiptStepPrice: m["receiptstepprice"].(string),
-    ReceiptScoreAddress: m["receiptscoreaddress"].(string),
-    ReceiptLogs: m["receiptlogs"].(string),
-    ReceiptStatus: uint32(m["receiptstatus"].(int64)),
     ItemId: m["itemid"].(string),
     ItemTimestamp: m["itemtimestamp"].(string),
   }
