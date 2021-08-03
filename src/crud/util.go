@@ -32,11 +32,11 @@ func convertBsonMToLog(m bson.M) models.Log {
     LogIndex: m["logindex"].(uint64),
     TransactionHash: m["transactionhash"].(string),
     TransactionIndex: m["transactionindex"].(uint32),
-    Address: m["address"].(string)
-    Data: m["data"].(string)
-    Indexed: m["indexed"].(string)
-    BlockNumber: m["blocknumber"].(uint64)
-    BlockTimestamp: m["blocktimestamp"].(uint64)
+    Address: m["address"].(string),
+    Data: m["data"].(string),
+    Indexed: m["indexed"].(string),
+    BlockNumber: m["blocknumber"].(uint64),
+    BlockTimestamp: m["blocktimestamp"].(uint64),
     BlockHash: m["blockhash"].(string),
     ItemId: m["itemid"].(string),
     ItemTimestamp: m["itemtimestamp"].(string),

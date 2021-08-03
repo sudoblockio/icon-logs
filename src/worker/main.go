@@ -6,15 +6,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/geometry-labs/icon-transactions/worker/transformers"
 	"go.uber.org/zap"
 
-	"github.com/geometry-labs/icon-transactions/config"
-	"github.com/geometry-labs/icon-transactions/crud"
-	"github.com/geometry-labs/icon-transactions/global"
-	"github.com/geometry-labs/icon-transactions/kafka"
-	"github.com/geometry-labs/icon-transactions/logging"
-	"github.com/geometry-labs/icon-transactions/metrics"
+	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/crud"
+	"github.com/geometry-labs/icon-logs/global"
+	"github.com/geometry-labs/icon-logs/kafka"
+	"github.com/geometry-labs/icon-logs/logging"
+	"github.com/geometry-labs/icon-logs/metrics"
+	"github.com/geometry-labs/icon-logs/worker/transformers"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	metrics.MetricsWorkerStart()
 
 	// Start Mongodb loader
-	crud.StartTransactionLoader()
+	crud.StartLogLoader()
 
 	// Start kafka consumer
 	kafka.StartWorkerConsumers()
@@ -36,7 +36,7 @@ func main() {
 	kafka.StartProducers()
 
 	// Start transformers
-	transformers.StartTransactionsTransformer()
+	transformers.StartLogsTransformer()
 
 	// Listen for close sig
 	// Register for interupt (Ctrl+C) and SIGTERM (docker)

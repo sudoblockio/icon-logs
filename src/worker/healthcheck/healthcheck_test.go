@@ -1,15 +1,13 @@
-//+build unit
-
 package healthcheck
 
 import (
-	"github.com/geometry-labs/icon-transactions/config"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/geometry-labs/icon-transactions/api/routes"
+	"github.com/geometry-labs/icon-logs/api/routes"
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 func init() {

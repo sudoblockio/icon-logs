@@ -1,7 +1,6 @@
 package healthcheck
 
 import (
-	"github.com/geometry-labs/icon-transactions/config"
 	"go.uber.org/zap"
 	"net/http"
 	"net/url"
@@ -10,9 +9,10 @@ import (
 	"github.com/InVisionApp/go-health/v2"
 	"github.com/InVisionApp/go-health/v2/checkers"
 	"github.com/InVisionApp/go-health/v2/handlers"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
-// TODO split API and WORKER
 func Start() {
 	// create a new health instance
 	h := health.New()

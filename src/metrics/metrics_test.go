@@ -2,12 +2,13 @@ package metrics
 
 import (
 	"fmt"
-	"github.com/geometry-labs/icon-transactions/config"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 func TestMetricsAPIStart(t *testing.T) {

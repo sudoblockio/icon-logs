@@ -1,13 +1,14 @@
 package metrics
 
 import (
-	"github.com/geometry-labs/icon-transactions/config"
 	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/geometry-labs/icon-logs/config"
 )
 
 var Metrics map[string]prometheus.Counter
