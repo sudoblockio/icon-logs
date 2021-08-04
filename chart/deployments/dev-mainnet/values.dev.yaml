@@ -1,12 +1,12 @@
 deployment:
   image:
-    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-blocks
+    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-logs
     tag: '32'
     pullPolicy: IfNotPresent
   replicaCount: 1
   annotations: |
     "consul.hashicorp.com/connect-inject": "true"
-    "consul.hashicorp.com/connect-service-upstreams": "icon-blocks-db:5432,
+    "consul.hashicorp.com/connect-service-upstreams": "icon-logs-db:5432,
     drift-users:8081"
   resources:
     requests:
