@@ -2,11 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"go.uber.org/zap"
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
@@ -38,18 +33,5 @@ func main() {
 	// Start transformers
 	transformers.StartLogsTransformer()
 
-	// Listen for close sig
-	// Register for interupt (Ctrl+C) and SIGTERM (docker)
-
-	//create a notification channel to shutdown
-	sigChan := make(chan os.Signal, 1)
-
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sigChan
-		zap.S().Info("Shutting down...")
-		global.ShutdownChan <- 1
-	}()
-
-	<-global.ShutdownChan
+  global.WaitShutdownSig()
 }
