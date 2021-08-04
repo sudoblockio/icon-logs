@@ -22,14 +22,14 @@ func convertMapToBsonD(v map[string]interface{}) (*bson.D, error) {
 func convertBsonMToLog(m bson.M) models.Log {
   return models.Log {
     Type: m["type"].(string),
-    LogIndex: m["logindex"].(uint64),
+    LogIndex: uint64(m["logindex"].(int64)),
     TransactionHash: m["transactionhash"].(string),
-    TransactionIndex: m["transactionindex"].(uint32),
+    TransactionIndex: uint32(m["transactionindex"].(int64)),
     Address: m["address"].(string),
     Data: m["data"].(string),
     Indexed: m["indexed"].(string),
-    BlockNumber: m["blocknumber"].(uint64),
-    BlockTimestamp: m["blocktimestamp"].(uint64),
+    BlockNumber: uint64(m["blocknumber"].(int64)),
+    BlockTimestamp: uint64(m["blocktimestamp"].(int64)),
     BlockHash: m["blockhash"].(string),
     ItemId: m["itemid"].(string),
     ItemTimestamp: m["itemtimestamp"].(string),

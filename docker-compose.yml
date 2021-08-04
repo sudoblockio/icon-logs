@@ -83,5 +83,5 @@ services:
       - ${LOGS_CONTEXT:-.}/src:/app
     environment:
       <<: *env
-      CONSUMER_TOPICS: "logs,logs"
+      CONSUMER_TOPICS: "logs"
       PRODUCER_TOPICS: "logs-ws"

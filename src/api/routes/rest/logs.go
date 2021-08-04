@@ -16,9 +16,7 @@ type LogsQuery struct {
 	Limit int64 `query:"limit"`
 	Skip  int64 `query:"skip"`
 
-	Hash string `query:"hash"`
-	From string `query:"from"`
-	To   string `query:"to"`
+  TransactionHash string `query:"transaction_hash"`
 }
 
 func LogsAddHandlers(app *fiber.App) {
@@ -37,9 +35,7 @@ func LogsAddHandlers(app *fiber.App) {
 // @Produce json
 // @Param limit query int false "amount of records"
 // @Param skip query int false "skip to a record"
-// @Param hash query string false "find by hash"
-// @Param from query string false "find by from address"
-// @Param to query string false "find by to address"
+// @Param transaction_hash query string false "find by transaction hash"
 // @Router /api/v1/logs [get]
 // @Success 200 {object} []models.Log
 // @Failure 422 {object} map[string]interface{}
@@ -64,9 +60,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		ctx,
 		params.Limit,
 		params.Skip,
-		params.Hash,
-		params.From,
-		params.To,
+		params.TransactionHash,
 	)
   if err != nil {
     c.Status(500)

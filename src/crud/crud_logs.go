@@ -29,8 +29,8 @@ func GetLogModel() *LogModel {
 			WriteChan:        make(chan *models.Log, 1),
 		}
 
-		// logModelInstance.CreateNumberIndex("blocknumber", false, false)
-		// logModelInstance.CreateStringIndex("toaddress")
+		logModelInstance.CreateNumberIndex("blocknumber", false, false)
+		logModelInstance.CreateStringIndex("transactionhash")
 	})
 	return logModelInstance
 }
@@ -96,9 +96,7 @@ func (b *LogModel) Select(
 	ctx context.Context,
 	limit int64,
 	skip int64,
-	hash string,
-	from string,
-	to string,
+  transaction_hash string,
 ) ([]models.Log, error) {
   err := b.mongoConn.retryPing(ctx)
   if err != nil {
@@ -117,16 +115,8 @@ func (b *LogModel) Select(
 	// Building KeyValue pairs
 	queryParams := make(map[string]interface{})
 	// hash
-	if hash != "" {
-		queryParams["hash"] = hash
-	}
-	// from
-	if from != "" {
-		queryParams["fromaddress"] = from
-	}
-	// to
-	if to != "" {
-		queryParams["toaddress"] = to
+	if transaction_hash != "" {
+		queryParams["transactionhash"] = transaction_hash
 	}
 
 	// Building FindOptions
