@@ -1,9 +1,12 @@
 package transformers
 
 import (
+  "encoding/hex"
+
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/Shopify/sarama.v1"
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
@@ -44,7 +47,7 @@ func logsTransformer() {
 		consumer_topic_msg := <-consumer_topic_chan
 
     // Log message from ETL
-    logRaw, err := convertBytesToLogRaw(consumer_topic_msg.Value)
+    logRaw, err := convertBytesToLogRawProtoBuf(consumer_topic_msg.Value)
     if err != nil {
       zap.S().Fatal("Logs Worker: Unable to proceed cannot convert kafka msg value to LogRaw, err: ", err.Error())
     }
@@ -68,7 +71,7 @@ func logsTransformer() {
 	}
 }
 
-func convertBytesToLogRaw(value []byte) (*models.LogRaw, error) {
+func convertBytesToLogRawJSON(value []byte) (*models.LogRaw, error) {
 	log := models.LogRaw{}
 
 	err := protojson.Unmarshal(value, &log)
@@ -77,6 +80,16 @@ func convertBytesToLogRaw(value []byte) (*models.LogRaw, error) {
 	}
 
 	return &log, nil
+}
+
+func convertBytesToLogRawProtoBuf(value []byte) (*models.LogRaw, error) {
+	log := models.LogRaw{}
+	err := proto.Unmarshal(value[6:], &log)
+	if err != nil {
+		zap.S().Error("Error: ", err.Error())
+		zap.S().Error("Value=", hex.Dump(value[6:]))
+	}
+	return &log, err
 }
 
 // Business logic goes here
