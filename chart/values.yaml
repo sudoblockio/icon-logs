@@ -1,9 +1,9 @@
-name: icon-blocks
+name: icon-logs
 networkName: mainnet
 
 deployment:
   image:
-    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-blocks
+    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-logs
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -30,7 +30,7 @@ autoscaler:
   averageCPU: 50
 
 service:
-  name: icon-blocks
+  name: icon-logs
   type: ClusterIP
   externalPort: 80
 
@@ -92,14 +92,14 @@ kafka:
   kafkaBrokerURL: ""
   schemaRegistryURL: ""
   kafkaGroupID: websocket-group
-  consumerTopics: "[blocks]"
-  producerTopics: "[blocks-ws]"
-  schemaNameTopics: "{\"blocks\": \"block_raw\", \"blocks-ws\": \"block\"}"
+  consumerTopics: "[logs]"
+  producerTopics: "[logs-ws]"
+  schemaNameTopics: "{\"logs\": \"block_raw\", \"logs-ws\": \"block\"}"
 
 db:
   dbDriver: postgres
   dbHost: localhost
   dbPort: 5432
-  dbName: blocks
+  dbName: logs
   dbSslmode: disable
   dbTimezone: UTC
