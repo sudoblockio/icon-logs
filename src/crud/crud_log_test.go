@@ -21,21 +21,21 @@ func init() {
 	logging.Init()
 }
 
-func TestGetLogModel(t *testing.T) {
+func TestGetTransactionModel(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetLogModel()
+	logModel := GetTransactionModel()
 	assert.NotEqual(nil, logModel)
 }
 
-func TestLogModelInsert(t *testing.T) {
+func TestTransactionModelInsert(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetLogModel()
+	logModel := GetTransactionModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadLogFixtures()
+	logFixtures := fixtures.LoadTransactionFixtures()
 
   ctx, cancel := context.WithCancel(context.Background())
   defer cancel()
@@ -47,14 +47,14 @@ func TestLogModelInsert(t *testing.T) {
 	}
 }
 
-func TestLogModelSelect(t *testing.T) {
+func TestTransactionModelSelect(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetLogModel()
+	logModel := GetTransactionModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadLogFixtures()
+	logFixtures := fixtures.LoadTransactionFixtures()
 
   ctx, cancel := context.WithCancel(context.Background())
   defer cancel()
@@ -66,42 +66,32 @@ func TestLogModelSelect(t *testing.T) {
 	}
 
 	// Select all logs
-	logs, err := logModel.Select(ctx, int64(len(logFixtures)), 0, "", "")
+	logs, err := logModel.Select(ctx, int64(len(logFixtures)), 0, "")
 	assert.Equal(len(logFixtures), len(logs))
   assert.Equal(nil, err)
 
 	// Test limit
-	logs, err = logModel.Select(ctx, 1, 0, "", "")
+	logs, err = logModel.Select(ctx, 1, 0, "")
 	assert.Equal(1, len(logs))
   assert.Equal(nil, err)
 
 	// Test skip
-	logs, err = logModel.Select(ctx, 1, 1, "", "")
-	assert.Equal(1, len(logs))
-  assert.Equal(nil, err)
-
-	// Test from
-	logs, err = logModel.Select(ctx, 1, 0, "hx02e6bf5860b7d7744ec5050545d10d37c72ac2ef", "")
-	assert.Equal(1, len(logs))
-  assert.Equal(nil, err)
-
-	// Test to
-	logs, err = logModel.Select(ctx, 1, 0, "", "cx38fd2687b202caf4bd1bda55223578f39dbb6561")
+	logs, err = logModel.Select(ctx, 1, 1, "")
 	assert.Equal(1, len(logs))
   assert.Equal(nil, err)
 }
 
-func TestLogModelLoader(t *testing.T) {
+func TestTransactionModelLoader(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetLogModel()
+	logModel := GetTransactionModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadLogFixtures()
+	logFixtures := fixtures.LoadTransactionFixtures()
 
 	// Start loader
-	go StartLogLoader()
+	go StartTransactionLoader()
 
 	// Write to loader channel
 	go func() {

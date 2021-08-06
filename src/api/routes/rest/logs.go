@@ -1,9 +1,7 @@
 package rest
 
 import (
-	"context"
 	"encoding/json"
-	"time"
 
 	fiber "github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
@@ -13,8 +11,8 @@ import (
 )
 
 type LogsQuery struct {
-	Limit int64 `query:"limit"`
-	Skip  int64 `query:"skip"`
+	Limit int `query:"limit"`
+	Skip  int `query:"skip"`
 
   TransactionHash string `query:"transaction_hash"`
 }
@@ -54,19 +52,11 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Get Logs
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	logs, err := crud.GetLogModel().Select(
-		ctx,
+	logs := crud.GetLogModel().Select(
 		params.Limit,
 		params.Skip,
 		params.TransactionHash,
 	)
-  if err != nil {
-    c.Status(500)
-    zap.S().Errorf("ERROR: %s", err.Error())
-    return c.SendString(`{"error": "unable to query logs"}`)
-  }
 
 	if len(logs) == 0 {
 		// No Content
