@@ -52,11 +52,16 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Get Logs
-	logs := crud.GetLogModel().Select(
+	logs, err := crud.GetLogModel().Select(
 		params.Limit,
 		params.Skip,
 		params.TransactionHash,
 	)
+  if err != nil {
+	  zap.S().Warnf("Logs CRUD ERROR: %s", err.Error())
+    c.Status(500)
+		return c.SendString(`{"error": "could not retrieve logs"}`)
+  }
 
 	if len(logs) == 0 {
 		// No Content

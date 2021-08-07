@@ -73,7 +73,7 @@ func (m *LogModel) Select(
 	limit int,
 	skip int,
   txHash string,
-) []models.Log {
+) ([]models.Log, error) {
 	db := m.db
 
 	// Latest logs first
@@ -93,9 +93,9 @@ func (m *LogModel) Select(
 	}
 
 	logs := []models.Log{}
-	db.Find(&logs)
+	db = db.Find(&logs)
 
-	return logs
+	return logs, db.Error
 }
 
 // StartLogLoader starts loader

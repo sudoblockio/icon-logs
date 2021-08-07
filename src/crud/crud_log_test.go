@@ -3,7 +3,6 @@ package crud
 import (
 	"testing"
 	"time"
-  "context"
 
 	"github.com/stretchr/testify/assert"
 
@@ -21,77 +20,76 @@ func init() {
 	logging.Init()
 }
 
-func TestGetTransactionModel(t *testing.T) {
+func TestGetLogModel(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetTransactionModel()
+	logModel := GetLogModel()
 	assert.NotEqual(nil, logModel)
 }
 
-func TestTransactionModelInsert(t *testing.T) {
+func TestLogModelInsert(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetTransactionModel()
+	logModel := GetLogModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadTransactionFixtures()
-
-  ctx, cancel := context.WithCancel(context.Background())
-  defer cancel()
+	logFixtures := fixtures.LoadLogFixtures()
 
 	for _, tx := range logFixtures {
 
-		insertErr := logModel.Insert(ctx, tx)
+		insertErr := logModel.Insert(tx)
 		assert.Equal(nil, insertErr)
 	}
 }
 
-func TestTransactionModelSelect(t *testing.T) {
+func TestLogModelSelect(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetTransactionModel()
+	logModel := GetLogModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadTransactionFixtures()
-
-  ctx, cancel := context.WithCancel(context.Background())
-  defer cancel()
+	logFixtures := fixtures.LoadLogFixtures()
 
 	for _, tx := range logFixtures {
 
-		insertErr := logModel.Insert(ctx, tx)
+		insertErr := logModel.Insert(tx)
 		assert.Equal(nil, insertErr)
 	}
 
 	// Select all logs
-	logs, err := logModel.Select(ctx, int64(len(logFixtures)), 0, "")
+	logs, err := logModel.Select(len(logFixtures), 0, "")
 	assert.Equal(len(logFixtures), len(logs))
   assert.Equal(nil, err)
 
 	// Test limit
-	logs, err = logModel.Select(ctx, 1, 0, "")
+	logs, err = logModel.Select(1, 0, "")
 	assert.Equal(1, len(logs))
   assert.Equal(nil, err)
 
 	// Test skip
-	logs, err = logModel.Select(ctx, 1, 1, "")
+	logs, err = logModel.Select(1, 1, "")
+	assert.Equal(1, len(logs))
+  assert.Equal(nil, err)
+
+	// Test txHash
+	logs, err = logModel.Select(1, 1, "0xc34fc0c061a6ad5f6eef087f3dae7b633a40bac1b7697ee528eb3f5861daecbe")
 	assert.Equal(1, len(logs))
   assert.Equal(nil, err)
 }
 
-func TestTransactionModelLoader(t *testing.T) {
+func TestLogModelLoader(t *testing.T) {
 	assert := assert.New(t)
 
-	logModel := GetTransactionModel()
+	logModel := GetLogModel()
 	assert.NotEqual(nil, logModel)
 
 	// Load fixtures
-	logFixtures := fixtures.LoadTransactionFixtures()
+	logFixtures := fixtures.LoadLogFixtures()
 
 	// Start loader
-	go StartTransactionLoader()
+	go StartLogLoader()
 
 	// Write to loader channel
 	go func() {
@@ -103,11 +101,8 @@ func TestTransactionModelLoader(t *testing.T) {
 	// Wait for inserts
 	time.Sleep(5)
 
-  ctx, cancel := context.WithCancel(context.Background())
-  defer cancel()
-
 	// Select all logs
-	logs, err := logModel.Select(ctx, int64(len(logFixtures)), 0, "", "")
+	logs, err := logModel.Select(len(logFixtures), 0, "")
 	assert.Equal(len(logFixtures), len(logs))
   assert.Equal(nil, err)
 }
