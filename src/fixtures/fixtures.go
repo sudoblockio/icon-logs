@@ -74,18 +74,32 @@ func getFixtureDir() string {
 
 func parseFixtureToLog(m map[string]interface{}) *models.Log {
 
+  // These feilds may be null
+  logIndex, ok := m["log_index"].(uint64)
+  if ok == false {
+    logIndex = 0
+  }
+  transactionIndex, ok := m["transaction_index"].(uint32)
+  if ok == false {
+    transactionIndex = 0
+  }
+  itemTimestamp, ok := m["item_timestamp"].(string)
+  if ok == false {
+    itemTimestamp = ""
+  }
+
   return &models.Log {
     Type: m["type"].(string),
-    LogIndex: m["log_index"].(uint64),
+    LogIndex: logIndex,
     TransactionHash: m["transaction_hash"].(string),
-    TransactionIndex: m["transaction_index"].(uint32),
-    Address: m["address"].(string)
-    Data: m["data"].(string)
-    Indexed: m["indexed"].(string)
-    BlockNumber: m["block_number"].(uint64)
-    BlockTimestamp: m["block_timestamp"].(uint64)
+    TransactionIndex: transactionIndex,
+    Address: m["address"].(string),
+    Data: m["data"].(string),
+    Indexed: m["indexed"].(string),
+    BlockNumber: uint64(m["block_number"].(float64)),
+    BlockTimestamp: uint64(m["block_timestamp"].(float64)),
     BlockHash: m["block_hash"].(string),
     ItemId: m["item_id"].(string),
-    ItemTimestamp: m["item_timestamp"].(string),
+    ItemTimestamp: itemTimestamp,
   }
 }

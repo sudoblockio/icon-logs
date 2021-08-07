@@ -18,10 +18,10 @@ func init() {
 	logging.Init()
 }
 
-func TestLoadTransactionFixtures(t *testing.T) {
+func TestLoadLogFixtures(t *testing.T) {
 	assert := assert.New(t)
 
-	transactionFixtures := LoadTransactionFixtures()
+	logFixtures := LoadLogFixtures()
 
-	assert.NotEqual(0, len(transactionFixtures))
+	assert.NotEqual(0, len(logFixtures))
 }
