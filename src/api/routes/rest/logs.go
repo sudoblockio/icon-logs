@@ -1,6 +1,7 @@
 package rest
 
 import (
+  "strconv"
 	"encoding/json"
 
 	fiber "github.com/gofiber/fiber/v2"
@@ -67,6 +68,9 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		// No Content
 		c.Status(204)
 	}
+
+  // Set headers
+  c.Append("X-TOTAL-COUNT", strconv.Itoa(len(logs)))
 
 	body, _ := json.Marshal(&logs)
 	return c.SendString(string(body))
