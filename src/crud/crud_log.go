@@ -72,7 +72,7 @@ func (m *LogModel) Insert(log *models.Log) error {
 func (m *LogModel) Select(
 	limit int,
 	skip int,
-  txHash string,
+	txHash string,
 ) ([]models.Log, error) {
 	db := m.db
 
@@ -98,6 +98,15 @@ func (m *LogModel) Select(
 	return logs, db.Error
 }
 
+func (m *LogModel) CountAll() int64 {
+	db := m.db
+
+	var count int64
+	db.Model(&[]models.Log{}).Count(&count)
+
+	return count
+}
+
 // StartLogLoader starts loader
 func StartLogLoader() {
 	go func() {
@@ -111,7 +120,7 @@ func StartLogLoader() {
 			// Load log to database
 			GetLogModel().Insert(log)
 
-      zap.S().Debugf("Loader Log: Loaded in postgres table Logs, Block Number: %d", log.BlockNumber)
+			zap.S().Debugf("Loader Log: Loaded in postgres table Logs, Block Number: %d", log.BlockNumber)
 		}
 	}()
 }

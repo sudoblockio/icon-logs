@@ -70,7 +70,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
   // Set headers
-  c.Append("X-TOTAL-COUNT", strconv.Itoa(len(logs)))
+  c.Append("X-TOTAL-COUNT", strconv.FormatInt(crud.GetLogModel().CountAll(), 10))
 
 	body, _ := json.Marshal(&logs)
 	return c.SendString(string(body))
