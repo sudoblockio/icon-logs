@@ -61,22 +61,42 @@ func TestLogModelSelect(t *testing.T) {
 	// Select all logs
 	logs, err := logModel.Select(len(logFixtures), 0, "")
 	assert.Equal(len(logFixtures), len(logs))
-  assert.Equal(nil, err)
+	assert.Equal(nil, err)
 
 	// Test limit
 	logs, err = logModel.Select(1, 0, "")
 	assert.Equal(1, len(logs))
-  assert.Equal(nil, err)
+	assert.Equal(nil, err)
 
 	// Test skip
 	logs, err = logModel.Select(1, 1, "")
 	assert.Equal(1, len(logs))
-  assert.Equal(nil, err)
+	assert.Equal(nil, err)
 
 	// Test txHash
 	logs, err = logModel.Select(1, 1, "0xc34fc0c061a6ad5f6eef087f3dae7b633a40bac1b7697ee528eb3f5861daecbe")
 	assert.Equal(1, len(logs))
-  assert.Equal(nil, err)
+	assert.Equal(nil, err)
+}
+
+func TestLogModelCountAll(t *testing.T) {
+	assert := assert.New(t)
+
+	logModel := GetLogModel()
+	assert.NotEqual(nil, logModel)
+
+	migrateErr := logModel.Migrate()
+	assert.Equal(nil, migrateErr)
+
+	// Load fixtures
+	logFixtures := fixtures.LoadLogFixtures()
+	for _, log := range logFixtures {
+		insertErr := logModel.Insert(log)
+		assert.Equal(nil, insertErr)
+	}
+
+	count := logModel.CountAll()
+	assert.NotEqual(0, count)
 }
 
 func TestLogModelLoader(t *testing.T) {
@@ -104,5 +124,5 @@ func TestLogModelLoader(t *testing.T) {
 	// Select all logs
 	logs, err := logModel.Select(len(logFixtures), 0, "")
 	assert.Equal(len(logFixtures), len(logs))
-  assert.Equal(nil, err)
+	assert.Equal(nil, err)
 }
