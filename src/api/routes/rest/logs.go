@@ -17,6 +17,7 @@ type LogsQuery struct {
 	Skip  int `query:"skip"`
 
 	TransactionHash string `query:"transaction_hash"`
+	ScoreAddress    string `query:"score_address"`
 }
 
 func LogsAddHandlers(app *fiber.App) {
@@ -36,6 +37,7 @@ func LogsAddHandlers(app *fiber.App) {
 // @Param limit query int false "amount of records"
 // @Param skip query int false "skip to a record"
 // @Param transaction_hash query string false "find by transaction hash"
+// @Param score_address query string false "find by score address"
 // @Router /api/v1/logs [get]
 // @Success 200 {object} []models.Log
 // @Failure 422 {object} map[string]interface{}
@@ -58,6 +60,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		params.Limit,
 		params.Skip,
 		params.TransactionHash,
+		params.ScoreAddress,
 	)
 	if err != nil {
 		zap.S().Warnf("Logs CRUD ERROR: %s", err.Error())

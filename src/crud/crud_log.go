@@ -73,6 +73,7 @@ func (m *LogModel) Select(
 	limit int,
 	skip int,
 	txHash string,
+	scoreAddr string,
 ) ([]models.Log, error) {
 	db := m.db
 
@@ -90,6 +91,11 @@ func (m *LogModel) Select(
 	// Hash
 	if txHash != "" {
 		db = db.Where("transaction_hash = ?", txHash)
+	}
+
+	// Address
+	if scoreAddr != "" {
+		db = db.Where("address = ?", scoreAddr)
 	}
 
 	logs := []models.Log{}
