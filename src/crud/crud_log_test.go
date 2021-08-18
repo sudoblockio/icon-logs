@@ -79,26 +79,6 @@ func TestLogModelSelect(t *testing.T) {
 	assert.Equal(nil, err)
 }
 
-func TestLogModelCountAll(t *testing.T) {
-	assert := assert.New(t)
-
-	logModel := GetLogModel()
-	assert.NotEqual(nil, logModel)
-
-	migrateErr := logModel.Migrate()
-	assert.Equal(nil, migrateErr)
-
-	// Load fixtures
-	logFixtures := fixtures.LoadLogFixtures()
-	for _, log := range logFixtures {
-		insertErr := logModel.Insert(log)
-		assert.Equal(nil, insertErr)
-	}
-
-	count := logModel.CountAll()
-	assert.NotEqual(0, count)
-}
-
 func TestLogModelLoader(t *testing.T) {
 	assert := assert.New(t)
 
@@ -109,7 +89,7 @@ func TestLogModelLoader(t *testing.T) {
 	logFixtures := fixtures.LoadLogFixtures()
 
 	// Start loader
-	go StartLogLoader()
+	StartLogLoader()
 
 	// Write to loader channel
 	go func() {

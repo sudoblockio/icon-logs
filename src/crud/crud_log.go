@@ -98,15 +98,6 @@ func (m *LogModel) Select(
 	return logs, db.Error
 }
 
-func (m *LogModel) CountAll() int64 {
-	db := m.db
-
-	var count int64
-	db.Model(&[]models.Log{}).Count(&count)
-
-	return count
-}
-
 // StartLogLoader starts loader
 func StartLogLoader() {
 	go func() {

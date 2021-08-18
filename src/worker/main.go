@@ -21,8 +21,9 @@ func main() {
 	// Start Prometheus client
 	metrics.MetricsWorkerStart()
 
-	// Start Mongodb loader
+	// Start Mongodb loaders
 	crud.StartLogLoader()
+	crud.StartLogCountLoader()
 
 	// Start kafka consumer
 	kafka.StartWorkerConsumers()
@@ -33,5 +34,5 @@ func main() {
 	// Start transformers
 	transformers.StartLogsTransformer()
 
-  global.WaitShutdownSig()
+	global.WaitShutdownSig()
 }

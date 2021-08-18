@@ -1,21 +1,22 @@
 package rest
 
 import (
-  "strconv"
 	"encoding/json"
+	"strconv"
 
 	fiber "github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
+	"github.com/geometry-labs/icon-logs/models"
 )
 
 type LogsQuery struct {
 	Limit int `query:"limit"`
 	Skip  int `query:"skip"`
 
-  TransactionHash string `query:"transaction_hash"`
+	TransactionHash string `query:"transaction_hash"`
 }
 
 func LogsAddHandlers(app *fiber.App) {
@@ -58,19 +59,27 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		params.Skip,
 		params.TransactionHash,
 	)
-  if err != nil {
-	  zap.S().Warnf("Logs CRUD ERROR: %s", err.Error())
-    c.Status(500)
+	if err != nil {
+		zap.S().Warnf("Logs CRUD ERROR: %s", err.Error())
+		c.Status(500)
 		return c.SendString(`{"error": "could not retrieve logs"}`)
-  }
+	}
 
 	if len(logs) == 0 {
 		// No Content
 		c.Status(204)
 	}
 
-  // Set headers
-  c.Append("X-TOTAL-COUNT", strconv.FormatInt(crud.GetLogModel().CountAll(), 10))
+	// Set X-TOTAL-COUNT
+	counter, err := crud.GetLogCountModel().Select()
+	if err != nil {
+		counter = models.LogCount{
+			Count: 0,
+			Id:    0,
+		}
+		zap.S().Warn("Could not retrieve log count: ", err.Error())
+	}
+	c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter.Count, 10))
 
 	body, _ := json.Marshal(&logs)
 	return c.SendString(string(body))
