@@ -56,7 +56,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Get Logs
-	logs, err := crud.GetLogModel().Select(
+	logs, count, err := crud.GetLogModel().Select(
 		params.Limit,
 		params.Skip,
 		params.TransactionHash,
@@ -74,15 +74,22 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Set X-TOTAL-COUNT
-	counter, err := crud.GetLogCountModel().Select()
-	if err != nil {
-		counter = models.LogCount{
-			Count: 0,
-			Id:    0,
+	if count != -1 {
+		// Filters given, count some
+		c.Append("X-TOTAL-COUNT", strconv.FormatInt(count, 10))
+	} else {
+		// No filters given, count all
+		// Total count in the log_counts table
+		counter, err := crud.GetLogCountModel().Select()
+		if err != nil {
+			counter = models.LogCount{
+				Count: 0,
+				Id:    0,
+			}
+			zap.S().Warn("Could not retrieve log count: ", err.Error())
 		}
-		zap.S().Warn("Could not retrieve log count: ", err.Error())
+		c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter.Count, 10))
 	}
-	c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter.Count, 10))
 
 	body, _ := json.Marshal(&logs)
 	return c.SendString(string(body))

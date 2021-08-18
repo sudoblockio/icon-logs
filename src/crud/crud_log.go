@@ -69,39 +69,54 @@ func (m *LogModel) Insert(log *models.Log) error {
 }
 
 // Select - select from logs table
+// Returns: models, total count (if filters), error (if present)
 func (m *LogModel) Select(
 	limit int,
 	skip int,
 	txHash string,
 	scoreAddr string,
-) ([]models.Log, error) {
+) ([]models.Log, int64, error) {
 	db := m.db
+	computeCount := false
+
+	// Set table
+	db = db.Model(&models.Log{})
 
 	// Latest logs first
 	db = db.Order("block_number desc")
 
-	// Limit is required and defaulted to 1
-	db = db.Limit(limit)
-
-	// Skip
-	if skip != 0 {
-		db = db.Offset(skip)
-	}
-
 	// Hash
 	if txHash != "" {
+		computeCount = true
 		db = db.Where("transaction_hash = ?", txHash)
 	}
 
 	// Address
 	if scoreAddr != "" {
+		computeCount = true
 		db = db.Where("address = ?", scoreAddr)
+	}
+
+	// Count, if needed
+	count := int64(-1)
+	if computeCount {
+		db.Count(&count)
+	}
+
+	// Limit is required and defaulted to 1
+	// Note: Count before setting limit
+	db = db.Limit(limit)
+
+	// Skip
+	// Note: Count before setting skip
+	if skip != 0 {
+		db = db.Offset(skip)
 	}
 
 	logs := []models.Log{}
 	db = db.Find(&logs)
 
-	return logs, db.Error
+	return logs, count, db.Error
 }
 
 // StartLogLoader starts loader
