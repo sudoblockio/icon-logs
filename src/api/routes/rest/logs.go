@@ -55,6 +55,12 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		params.Limit = 1
 	}
 
+	// Check Params
+	if params.Limit < 1 || params.Limit > config.Config.MaxPageSize {
+		c.Status(422)
+		return c.SendString(`{"error": "limit must be greater than 0 and less than 101"}`)
+	}
+
 	// Get Logs
 	logs, count, err := crud.GetLogModel().Select(
 		params.Limit,

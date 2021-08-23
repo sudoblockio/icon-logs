@@ -43,7 +43,7 @@ type configType struct {
 	SchemaFolderPath string            `envconfig:"SCHEMA_FOLDER_PATH" required:"false" default:"schemas/"`
 
 	// DB
-  DbDriver   string `envconfig:"DB_DRIVER" required:"false" default:"postgres"`
+	DbDriver   string `envconfig:"DB_DRIVER" required:"false" default:"postgres"`
 	DbHost     string `envconfig:"DB_HOST" required:"false" default:"localhost"`
 	DbPort     string `envconfig:"DB_PORT" required:"false" default:"5432"`
 	DbUser     string `envconfig:"DB_USER" required:"false" default:"postgres"`
@@ -53,9 +53,7 @@ type configType struct {
 	DbTimezone string `envconfig:"DB_TIMEZONE" required:"false" default:"UTC"`
 
 	// Endpoints
-	MaxPageSize    int `envconfig:"MAX_PAGE_SIZE" required:"false" default:"100"`
-	MinPageSize    int `envconfig:"MIN_PAGE_SIZE" required:"false" default:"10"`
-	RequestTimeout int `envconfig:"REQUEST_TIMEOUT" required:"false" default:"10"`
+	MaxPageSize int `envconfig:"MAX_PAGE_SIZE" required:"false" default:"100"`
 }
 
 var Config configType
