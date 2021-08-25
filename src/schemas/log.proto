@@ -8,7 +8,7 @@ message Log {
   option (gorm.opts) = {ormable: true};
 
   string type = 1;
-  uint64 log_index = 2;
+  uint64 log_index = 2 [(gorm.field).tag = {index: "idx_log_index"}];
   string transaction_hash = 3 [(gorm.field).tag = {index: "idx_transaction_hash"}];
   uint32 transaction_index = 4;
   string address = 5 [(gorm.field).tag = {index: "idx_address"}];

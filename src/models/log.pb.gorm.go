@@ -30,7 +30,7 @@ type LogORM struct {
 	Indexed          string
 	ItemId           string
 	ItemTimestamp    string
-	LogIndex         uint64
+	LogIndex         uint64 `gorm:"index:idx_log_index"`
 	TransactionHash  string `gorm:"index:idx_transaction_hash"`
 	TransactionIndex uint32
 	Type             string

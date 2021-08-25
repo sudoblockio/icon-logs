@@ -1,13 +1,12 @@
 package main
 
 import (
-  "log"
+	"log"
 
 	"github.com/geometry-labs/icon-logs/api/healthcheck"
 	"github.com/geometry-labs/icon-logs/api/routes"
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/global"
-	"github.com/geometry-labs/icon-logs/kafka"
 	"github.com/geometry-labs/icon-logs/logging"
 	"github.com/geometry-labs/icon-logs/metrics"
 	_ "github.com/geometry-labs/icon-logs/models" // for swagger docs
@@ -18,10 +17,6 @@ func main() {
 
 	logging.Init()
 	log.Printf("Main: Starting logging with level %s", config.Config.LogLevel)
-
-	// Start kafka consumers
-	// Go routines start in function
-	kafka.StartAPIConsumers()
 
 	// Start Prometheus client
 	// Go routine starts in function
@@ -35,5 +30,5 @@ func main() {
 	// Go routine starts in function
 	healthcheck.Start()
 
-  global.WaitShutdownSig()
+	global.WaitShutdownSig()
 }

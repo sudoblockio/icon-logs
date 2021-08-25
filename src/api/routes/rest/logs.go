@@ -62,7 +62,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Get Logs
-	logs, count, err := crud.GetLogModel().Select(
+	logs, count, err := crud.GetLogModel().SelectMany(
 		params.Limit,
 		params.Skip,
 		params.TransactionHash,

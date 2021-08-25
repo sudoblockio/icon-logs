@@ -3,6 +3,7 @@ package crud
 import (
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
@@ -70,7 +71,7 @@ func (m *LogModel) Insert(log *models.Log) error {
 
 // Select - select from logs table
 // Returns: models, total count (if filters), error (if present)
-func (m *LogModel) Select(
+func (m *LogModel) SelectMany(
 	limit int,
 	skip int,
 	txHash string,
@@ -119,20 +120,74 @@ func (m *LogModel) Select(
 	return logs, count, db.Error
 }
 
+func (m *LogModel) SelectOne(
+	txHash string,
+	logIndex uint64,
+) (models.Log, error) {
+	db := m.db
+
+	// Set table
+	db = db.Model(&models.Log{})
+
+	db = db.Where("transaction_hash = ?", txHash)
+
+	db = db.Where("log_index = ?", logIndex)
+
+	log := models.Log{}
+	db = db.First(&log)
+
+	return log, db.Error
+}
+
 // StartLogLoader starts loader
 func StartLogLoader() {
 	go func() {
-		var log *models.Log
 		postgresLoaderChan := GetLogModel().WriteChan
 
 		for {
-			// Read log
-			log = <-postgresLoaderChan
+			// Read transaction
+			newLog := <-postgresLoaderChan
 
-			// Load log to database
-			GetLogModel().Insert(log)
+			// Load transaction to database
+			GetLogModel().Insert(newLog)
 
-			zap.S().Debugf("Loader Log: Loaded in postgres table Logs, Block Number: %d", log.BlockNumber)
+			// Check current state
+			for {
+				// Wait for postgres to set state before processing more messages
+
+				checkLog, err := GetLogModel().SelectOne(newLog.TransactionHash, newLog.LogIndex)
+				if err != nil {
+					zap.S().Warn("State check error: ", err.Error())
+					zap.S().Warn("Waiting 100ms...")
+					time.Sleep(100 * time.Millisecond)
+					continue
+				}
+
+				// check all fields
+				if checkLog.Type == newLog.Type &&
+					checkLog.LogIndex == newLog.LogIndex &&
+					checkLog.TransactionHash == newLog.TransactionHash &&
+					checkLog.TransactionIndex == newLog.TransactionIndex &&
+					checkLog.Address == newLog.Address &&
+					checkLog.Data == newLog.Data &&
+					checkLog.Indexed == newLog.Indexed &&
+					checkLog.BlockNumber == newLog.BlockNumber &&
+					checkLog.BlockTimestamp == newLog.BlockTimestamp &&
+					checkLog.BlockHash == newLog.BlockHash &&
+					checkLog.ItemId == newLog.ItemId &&
+					checkLog.ItemTimestamp == newLog.ItemTimestamp {
+					// Success
+					break
+				} else {
+					// Wait
+					zap.S().Warn("Models did not match")
+					zap.S().Warn("Waiting 100ms...")
+					time.Sleep(100 * time.Millisecond)
+					continue
+				}
+			}
+
+			zap.S().Debugf("Loader Log: Loaded in postgres table Logs, Block Number: %d", newLog.BlockNumber)
 		}
 	}()
 }

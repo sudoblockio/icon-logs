@@ -43,7 +43,7 @@ func TestLogModelInsert(t *testing.T) {
 	}
 }
 
-func TestLogModelSelect(t *testing.T) {
+func TestLogModelSelectMany(t *testing.T) {
 	assert := assert.New(t)
 
 	logModel := GetLogModel()
@@ -58,28 +58,28 @@ func TestLogModelSelect(t *testing.T) {
 		assert.Equal(nil, insertErr)
 	}
 
-	// Select all logs
-	logs, _, err := logModel.Select(len(logFixtures), 0, "", "")
+	// SelectMany all logs
+	logs, _, err := logModel.SelectMany(len(logFixtures), 0, "", "")
 	assert.Equal(len(logFixtures), len(logs))
 	assert.Equal(nil, err)
 
 	// Test limit
-	logs, _, err = logModel.Select(1, 0, "", "")
+	logs, _, err = logModel.SelectMany(1, 0, "", "")
 	assert.Equal(1, len(logs))
 	assert.Equal(nil, err)
 
 	// Test skip
-	logs, _, err = logModel.Select(1, 1, "", "")
+	logs, _, err = logModel.SelectMany(1, 1, "", "")
 	assert.Equal(1, len(logs))
 	assert.Equal(nil, err)
 
 	// Test txHash
-	logs, _, err = logModel.Select(1, 1, "0xc34fc0c061a6ad5f6eef087f3dae7b633a40bac1b7697ee528eb3f5861daecbe", "")
+	logs, _, err = logModel.SelectMany(1, 1, "0xc34fc0c061a6ad5f6eef087f3dae7b633a40bac1b7697ee528eb3f5861daecbe", "")
 	assert.Equal(1, len(logs))
 	assert.Equal(nil, err)
 
 	// Test scoreAddr
-	logs, _, err = logModel.Select(1, 1, "", "cx38fd2687b202caf4bd1bda55223578f39dbb6561")
+	logs, _, err = logModel.SelectMany(1, 1, "", "cx38fd2687b202caf4bd1bda55223578f39dbb6561")
 	assert.Equal(1, len(logs))
 	assert.Equal(nil, err)
 }
@@ -106,8 +106,8 @@ func TestLogModelLoader(t *testing.T) {
 	// Wait for inserts
 	time.Sleep(5)
 
-	// Select all logs
-	logs, _, err := logModel.Select(len(logFixtures), 0, "", "")
+	// SelectMany all logs
+	logs, _, err := logModel.SelectMany(len(logFixtures), 0, "", "")
 	assert.Equal(len(logFixtures), len(logs))
 	assert.Equal(nil, err)
 }
