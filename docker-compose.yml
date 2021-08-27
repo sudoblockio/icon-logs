@@ -15,6 +15,9 @@ x-env: &env
   HEALTH_PREFIX: "/heath"
   METRICS_PREFIX: "/metrics"
 
+  # CORS
+  CORS_ALLOW_ORIGINS: "*"
+
   # Monitoring
   HEALTH_POLLING_INTERVAL: "60"
 
