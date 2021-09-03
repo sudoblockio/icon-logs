@@ -3,10 +3,9 @@ package ws
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	"gopkg.in/Shopify/sarama.v1"
 
-	"github.com/geometry-labs/icon-logs/kafka"
 	"github.com/geometry-labs/icon-logs/config"
+	"github.com/geometry-labs/icon-logs/redis"
 )
 
 func LogsAddHandlers(app *fiber.App) {
@@ -23,50 +22,47 @@ func LogsAddHandlers(app *fiber.App) {
 		return fiber.ErrUpgradeRequired
 	})
 
-	app.Get(prefix+"/", websocket.New(handlerGetLogs(kafka.Broadcasters["logs"])))
+	app.Get(prefix+"/", websocket.New(handlerGetLogs))
 }
 
-func handlerGetLogs(broadcaster *kafka.TopicBroadcaster) func(c *websocket.Conn) {
+func handlerGetLogs(c *websocket.Conn) {
 
-	return func(c *websocket.Conn) {
+	// Add broadcaster
+	msgChan := make(chan []byte)
+	id := redis.GetBroadcaster().AddBroadcastChannel(msgChan)
+	defer func() {
+		// Remove broadcaster
+		redis.GetBroadcaster().RemoveBroadcastChannel(id)
+	}()
 
-		// Add broadcaster
-		topic_chan := make(chan *sarama.ConsumerMessage)
-		id := broadcaster.AddBroadcastChannel(topic_chan)
-		defer func() {
-			// Remove broadcaster
-			broadcaster.RemoveBroadcastChannel(id)
-		}()
-
-		// Read for close
-		client_close_sig := make(chan bool)
-		go func() {
-			for {
-				_, _, err := c.ReadMessage()
-				if err != nil {
-					client_close_sig <- true
-					break
-				}
-			}
-		}()
-
+	// Read for close
+	clientCloseSig := make(chan bool)
+	go func() {
 		for {
-			// Read
-			msg := <-topic_chan
-
-			// Broadcast
-			err := c.WriteMessage(websocket.TextMessage, msg.Value)
+			_, _, err := c.ReadMessage()
 			if err != nil {
+				clientCloseSig <- true
 				break
 			}
+		}
+	}()
 
-			// check for client close
-			select {
-			case _ = <-client_close_sig:
-				break
-			default:
-				continue
-			}
+	for {
+		// Read
+		msg := <-msgChan
+
+		// Broadcast
+		err := c.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			break
+		}
+
+		// check for client close
+		select {
+		case _ = <-clientCloseSig:
+			break
+		default:
+			continue
 		}
 	}
 }

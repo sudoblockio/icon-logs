@@ -1,5 +1,8 @@
 #!/bin/sh
 
+echo "Removing old models..."
+rm ../models/*
+
 echo "Starting proto to struct..."
 
 protoc -I=. -I=$GOPATH/src/ --go_out=.. --gorm_out=engine=postgres:.. *.proto

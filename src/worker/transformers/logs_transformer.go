@@ -2,6 +2,7 @@ package transformers
 
 import (
 	"encoding/hex"
+	"encoding/json"
 
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -10,6 +11,7 @@ import (
 	"github.com/geometry-labs/icon-logs/crud"
 	"github.com/geometry-labs/icon-logs/kafka"
 	"github.com/geometry-labs/icon-logs/models"
+	"github.com/geometry-labs/icon-logs/redis"
 )
 
 func StartLogsTransformer() {
@@ -25,6 +27,7 @@ func logsTransformer() {
 	// Output channels
 	logLoaderChan := crud.GetLogModel().WriteChan
 	logCountLoaderChan := crud.GetLogCountModel().WriteChan
+	redisClient := redis.GetRedisClient()
 
 	zap.S().Debug("Logs Worker: started working")
 	for {
@@ -38,11 +41,15 @@ func logsTransformer() {
 		}
 
 		// Transform logic
-		var transformedLog *models.Log
-		transformedLog = transformLogRaw(logRaw)
+		log := transformLogRawToLog(logRaw)
+
+		// Push to redis
+		logWebsocket := transformLogToLogWS(log)
+		logWebsocketJSON, _ := json.Marshal(logWebsocket)
+		redisClient.Publish(logWebsocketJSON)
 
 		// Load log to Postgres
-		logLoaderChan <- transformedLog
+		logLoaderChan <- log
 
 		// Load log counter to Postgres
 		logCount := &models.LogCount{
@@ -66,7 +73,7 @@ func convertBytesToLogRawProtoBuf(value []byte) (*models.LogRaw, error) {
 }
 
 // Business logic goes here
-func transformLogRaw(logRaw *models.LogRaw) *models.Log {
+func transformLogRawToLog(logRaw *models.LogRaw) *models.Log {
 	return &models.Log{
 		Type:             logRaw.Type,
 		LogIndex:         logRaw.LogIndex,
@@ -80,5 +87,21 @@ func transformLogRaw(logRaw *models.LogRaw) *models.Log {
 		BlockHash:        logRaw.BlockHash,
 		ItemId:           logRaw.ItemId,
 		ItemTimestamp:    logRaw.ItemTimestamp,
+	}
+}
+
+// Business logic goes here
+func transformLogToLogWS(log *models.Log) *models.LogWebsocket {
+	return &models.LogWebsocket{
+		Type:             log.Type,
+		LogIndex:         log.LogIndex,
+		TransactionHash:  log.TransactionHash,
+		TransactionIndex: log.TransactionIndex,
+		Address:          log.Address,
+		Data:             log.Data,
+		Indexed:          log.Indexed,
+		BlockNumber:      log.BlockNumber,
+		BlockTimestamp:   log.BlockTimestamp,
+		BlockHash:        log.BlockHash,
 	}
 }
