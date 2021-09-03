@@ -19,7 +19,7 @@ ingress:
 
 api:
   image:
-    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-blocks-api
+    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-logs-api
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
@@ -64,7 +64,7 @@ api:
 
 worker:
   image:
-    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-blocks-worker
+    repository: 868027517775.dkr.ecr.us-west-2.amazonaws.com/icon-logs-worker
     tag: latest
     pullPolicy: IfNotPresent
   replicas: 1
