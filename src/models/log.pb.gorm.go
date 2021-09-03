@@ -31,6 +31,7 @@ type LogORM struct {
 	ItemId           string
 	ItemTimestamp    string
 	LogIndex         uint64 `gorm:"index:idx_log_index"`
+	Method           string
 	TransactionHash  string `gorm:"index:idx_transaction_hash"`
 	TransactionIndex uint32
 	Type             string
@@ -63,6 +64,7 @@ func (m *Log) ToORM(ctx context.Context) (LogORM, error) {
 	to.BlockHash = m.BlockHash
 	to.ItemId = m.ItemId
 	to.ItemTimestamp = m.ItemTimestamp
+	to.Method = m.Method
 	to.Id = m.Id
 	if posthook, ok := interface{}(m).(LogWithAfterToORM); ok {
 		err = posthook.AfterToORM(ctx, &to)
@@ -92,6 +94,7 @@ func (m *LogORM) ToPB(ctx context.Context) (Log, error) {
 	to.BlockHash = m.BlockHash
 	to.ItemId = m.ItemId
 	to.ItemTimestamp = m.ItemTimestamp
+	to.Method = m.Method
 	to.Id = m.Id
 	if posthook, ok := interface{}(m).(LogWithAfterToPB); ok {
 		err = posthook.AfterToPB(ctx, &to)
@@ -449,6 +452,10 @@ func DefaultApplyFieldMaskLog(ctx context.Context, patchee *Log, patcher *Log, u
 		}
 		if f == prefix+"ItemTimestamp" {
 			patchee.ItemTimestamp = patcher.ItemTimestamp
+			continue
+		}
+		if f == prefix+"Method" {
+			patchee.Method = patcher.Method
 			continue
 		}
 		if f == prefix+"Id" {

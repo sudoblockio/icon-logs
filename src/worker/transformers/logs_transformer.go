@@ -3,6 +3,7 @@ package transformers
 import (
 	"encoding/hex"
 	"encoding/json"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
@@ -74,6 +75,17 @@ func convertBytesToLogRawProtoBuf(value []byte) (*models.LogRaw, error) {
 
 // Business logic goes here
 func transformLogRawToLog(logRaw *models.LogRaw) *models.Log {
+
+	////////////
+	// Method //
+	////////////
+	var indexed []string
+	err := json.Unmarshal([]byte(logRaw.Indexed), &indexed)
+	if err != nil {
+		zap.S().Fatal("Unable to parse indexed field in log; indexed=", logRaw.Indexed, " error: ", err.Error())
+	}
+	method := strings.Split(indexed[0], "(")[0]
+
 	return &models.Log{
 		Type:             logRaw.Type,
 		LogIndex:         logRaw.LogIndex,
@@ -87,6 +99,7 @@ func transformLogRawToLog(logRaw *models.LogRaw) *models.Log {
 		BlockHash:        logRaw.BlockHash,
 		ItemId:           logRaw.ItemId,
 		ItemTimestamp:    logRaw.ItemTimestamp,
+		Method:           method,
 	}
 }
 
@@ -103,5 +116,6 @@ func transformLogToLogWS(log *models.Log) *models.LogWebsocket {
 		BlockNumber:      log.BlockNumber,
 		BlockTimestamp:   log.BlockTimestamp,
 		BlockHash:        log.BlockHash,
+		Method:           log.Method,
 	}
 }

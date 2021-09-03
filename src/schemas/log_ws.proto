@@ -15,4 +15,5 @@ message LogWebsocket {
   uint64 block_number = 8;
   uint64 block_timestamp = 9;
   string block_hash = 10;
+  string method = 11;
 }
