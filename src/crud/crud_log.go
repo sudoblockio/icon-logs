@@ -100,9 +100,9 @@ func (m *LogModel) SelectMany(
 
 	// Count, if needed
 	count := int64(-1)
-	if computeCount {
-		db.Count(&count)
-	}
+	//if computeCount {
+	//	db.Count(&count)
+	//}
 
 	// Limit is required and defaulted to 1
 	// Note: Count before setting limit
