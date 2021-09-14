@@ -1,3 +1,5 @@
+//+build unit
+
 package crud
 
 import (
@@ -40,6 +42,15 @@ func TestLogModelInsert(t *testing.T) {
 
 		insertErr := logModel.Insert(tx)
 		assert.Equal(nil, insertErr)
+
+		// Clean up
+		GetLogModel().db.Where(
+			"transaction_hash= ? ",
+			tx.TransactionHash,
+		).Where(
+			"log_index= ?",
+			tx.LogIndex,
+		).Delete(&tx)
 	}
 }
 
@@ -60,28 +71,40 @@ func TestLogModelSelectMany(t *testing.T) {
 
 	// SelectMany all logs
 	logs, _, err := logModel.SelectMany(len(logFixtures), 0, "", "")
-	assert.Equal(len(logFixtures), len(logs))
+	assert.Equal(len(logFixtures), len(*logs))
 	assert.Equal(nil, err)
 
 	// Test limit
 	logs, _, err = logModel.SelectMany(1, 0, "", "")
-	assert.Equal(1, len(logs))
+	assert.Equal(1, len(*logs))
 	assert.Equal(nil, err)
 
 	// Test skip
 	logs, _, err = logModel.SelectMany(1, 1, "", "")
-	assert.Equal(1, len(logs))
+	assert.Equal(1, len(*logs))
 	assert.Equal(nil, err)
 
 	// Test txHash
 	logs, _, err = logModel.SelectMany(1, 1, "0xc34fc0c061a6ad5f6eef087f3dae7b633a40bac1b7697ee528eb3f5861daecbe", "")
-	assert.Equal(1, len(logs))
+	assert.Equal(1, len(*logs))
 	assert.Equal(nil, err)
 
 	// Test scoreAddr
 	logs, _, err = logModel.SelectMany(1, 1, "", "cx38fd2687b202caf4bd1bda55223578f39dbb6561")
-	assert.Equal(1, len(logs))
+	assert.Equal(1, len(*logs))
 	assert.Equal(nil, err)
+
+	// Clean up
+	for _, tx := range logFixtures {
+
+		GetLogModel().db.Where(
+			"transaction_hash= ? ",
+			tx.TransactionHash,
+		).Where(
+			"log_index= ?",
+			tx.LogIndex,
+		).Delete(&tx)
+	}
 }
 
 func TestLogModelLoader(t *testing.T) {
@@ -108,6 +131,18 @@ func TestLogModelLoader(t *testing.T) {
 
 	// SelectMany all logs
 	logs, _, err := logModel.SelectMany(len(logFixtures), 0, "", "")
-	assert.Equal(len(logFixtures), len(logs))
+	assert.Equal(len(logFixtures), len(*logs))
 	assert.Equal(nil, err)
+
+	// Clean up
+	for _, tx := range logFixtures {
+
+		GetLogModel().db.Where(
+			"transaction_hash= ? ",
+			tx.TransactionHash,
+		).Where(
+			"log_index= ?",
+			tx.LogIndex,
+		).Delete(&tx)
+	}
 }

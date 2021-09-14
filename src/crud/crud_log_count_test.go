@@ -1,3 +1,5 @@
+//+build unit
+
 package crud
 
 import (
@@ -34,12 +36,9 @@ func TestLogCountModelInsert(t *testing.T) {
 	assert.NotEqual(nil, logCountModel)
 
 	logCountFixture := &models.LogCount{
-		Count: 1,
-		Id:    10,
+		TransactionHash: "0xa",
+		LogIndex:        10,
 	}
-
-	// Clear entry
-	logCountModel.Delete(*logCountFixture)
 
 	insertErr := logCountModel.Insert(logCountFixture)
 	assert.Equal(nil, insertErr)
@@ -53,20 +52,16 @@ func TestLogCountModelSelect(t *testing.T) {
 
 	// Load fixture
 	logCountFixture := &models.LogCount{
-		Count: 1,
-		Id:    10,
+		TransactionHash: "0xb",
+		LogIndex:        20,
 	}
-
-	// Clear entry
-	logCountModel.Delete(*logCountFixture)
 
 	insertErr := logCountModel.Insert(logCountFixture)
 	assert.Equal(nil, insertErr)
 
 	// Select LogCount
-	result, err := logCountModel.Select()
-	assert.Equal(logCountFixture.Count, result.Count)
-	assert.Equal(logCountFixture.Id, result.Id)
+	result, err := logCountModel.SelectLargestCount()
+	assert.NotEqual(result, 0)
 	assert.Equal(nil, err)
 }
 
@@ -78,34 +73,29 @@ func TestLogCountModelUpdate(t *testing.T) {
 
 	// Load fixture
 	logCountFixture := &models.LogCount{
-		Count: 1,
-		Id:    10,
+		TransactionHash: "0xc",
+		LogIndex:        30,
 	}
-
-	// Clear entry
-	logCountModel.Delete(*logCountFixture)
 
 	insertErr := logCountModel.Insert(logCountFixture)
 	assert.Equal(nil, insertErr)
 
 	// Select LogCount
-	result, err := logCountModel.Select()
-	assert.Equal(logCountFixture.Count, result.Count)
-	assert.Equal(logCountFixture.Id, result.Id)
+	resultOld, err := logCountModel.SelectLargestCount()
+	assert.NotEqual(resultOld, 0)
 	assert.Equal(nil, err)
 
 	// Update LogCount
 	logCountFixture = &models.LogCount{
-		Count: 10,
-		Id:    10,
+		TransactionHash: "0xd",
+		LogIndex:        40,
 	}
 	insertErr = logCountModel.Update(logCountFixture)
 	assert.Equal(nil, insertErr)
 
 	// Select LogCount
-	result, err = logCountModel.Select()
-	assert.Equal(logCountFixture.Count, result.Count)
-	assert.Equal(logCountFixture.Id, result.Id)
+	resultNew, err := logCountModel.SelectLargestCount()
+	assert.Equal(resultNew, resultOld+1)
 	assert.Equal(nil, err)
 }
 
@@ -117,21 +107,26 @@ func TestLogCountModelLoader(t *testing.T) {
 
 	// Load fixture
 	logCountFixture := &models.LogCount{
-		Count: 1,
-		Id:    10,
+		TransactionHash: "0xe",
+		LogIndex:        50,
 	}
-
-	// Clear entry
-	logCountModel.Delete(*logCountFixture)
 
 	// Start loader
 	StartLogCountLoader()
 
 	// Write to loader channel
 	go func() {
+		i := 0
 		for {
+			logCountFixture.LogIndex += 1
+
 			logCountModel.WriteChan <- logCountFixture
 			time.Sleep(1)
+
+			i++
+			if i > 3 {
+				break
+			}
 		}
 	}()
 
