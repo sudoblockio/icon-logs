@@ -2,11 +2,8 @@ package crud
 
 import (
 	"errors"
-	"strings"
 	"sync"
-	"time"
 
-	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -56,53 +53,68 @@ func (m *LogCountModel) Migrate() error {
 
 // Insert - Insert logCount into table
 func (m *LogCountModel) Insert(logCount *models.LogCount) error {
+	db := m.db
 
-	err := backoff.Retry(func() error {
-		query := m.db.Create(logCount)
+	// Set table
+	db = db.Model(&models.LogCount{})
 
-		if query.Error != nil && !strings.Contains(query.Error.Error(), "duplicate key value violates unique constraint") {
-			zap.S().Warn("POSTGRES Insert Error : ", query.Error.Error())
-			return query.Error
-		}
+	db = db.Create(logCount)
 
-		return nil
-	}, backoff.NewExponentialBackOff())
-
-	return err
-}
-
-// Update - Update logCount
-func (m *LogCountModel) Update(logCount *models.LogCount) error {
-
-	err := backoff.Retry(func() error {
-		query := m.db.Model(&models.LogCount{}).Where("id = ?", logCount.Id).Update("count", logCount.Count)
-
-		if query.Error != nil && !strings.Contains(query.Error.Error(), "duplicate key value violates unique constraint") {
-			zap.S().Warn("POSTGRES Insert Error : ", query.Error.Error())
-			return query.Error
-		}
-
-		return nil
-	}, backoff.NewExponentialBackOff())
-
-	return err
+	return db.Error
 }
 
 // Select - select from logCounts table
-func (m *LogCountModel) Select() (models.LogCount, error) {
+func (m *LogCountModel) SelectOne(transactionHash string, logIndex uint64) (models.LogCount, error) {
 	db := m.db
 
+	// Set table
+	db = db.Model(&models.LogCount{})
+
 	logCount := models.LogCount{}
+
+	// Transaction Hash
+	db = db.Where("transaction_hash = ?", transactionHash)
+
+	// Log Index
+	db = db.Where("log_index = ?", logIndex)
+
 	db = db.First(&logCount)
 
 	return logCount, db.Error
 }
 
-// Delete - delete from logCounts table
-func (m *LogCountModel) Delete(logCount models.LogCount) error {
-	db := m.db
+func (m *LogCountModel) SelectLargestCount() (uint64, error) {
 
-	db = db.Delete(&logCount)
+	db := m.db
+	//computeCount := false
+
+	// Set table
+	db = db.Model(&models.LogCount{})
+
+	// Get max id
+	count := uint64(0)
+	row := db.Select("max(id)").Row()
+	row.Scan(&count)
+
+	return count, db.Error
+}
+
+func (m *LogCountModel) Update(logCount *models.LogCount) error {
+
+	db := m.db
+	//computeCount := false
+
+	// Set table
+	db = db.Model(&models.LogCount{})
+
+	// Transaction Hash
+	db = db.Where("transaction_hash = ?", logCount.TransactionHash)
+
+	// Log Index
+	db = db.Where("log_index = ?", logCount.LogIndex)
+
+	// Update
+	db = db.Save(logCount)
 
 	return db.Error
 }
@@ -110,52 +122,27 @@ func (m *LogCountModel) Delete(logCount models.LogCount) error {
 // StartLogCountLoader starts loader
 func StartLogCountLoader() {
 	go func() {
-		var logCount *models.LogCount
-		postgresLoaderChan := GetLogCountModel().WriteChan
 
 		for {
 			// Read logCount
-			logCount = <-postgresLoaderChan
+			newLogCount := <-GetLogCountModel().WriteChan
 
-			// Load logCount to database
-			curCount, err := GetLogCountModel().Select()
+			// Insert
+			_, err := GetLogCountModel().SelectOne(
+				newLogCount.TransactionHash,
+				newLogCount.LogIndex,
+			)
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// New entry
-				GetLogCountModel().Insert(logCount)
-			} else if err == nil {
-				// Update existing entry
-				logCount.Count = logCount.Count + curCount.Count
-				GetLogCountModel().Update(logCount)
-			} else {
-				// Postgres error
-				zap.S().Fatal(err.Error())
-			}
-
-			// Check current state
-			for {
-				// Wait for postgres to set state before processing more messages
-
-				checkCount, err := GetLogCountModel().Select()
+				// Insert
+				err = GetLogCountModel().Insert(newLogCount)
 				if err != nil {
-					zap.S().Warn("State check error: ", err.Error())
-					zap.S().Warn("Waiting 100ms...")
-					time.Sleep(100 * time.Millisecond)
-					continue
+					zap.S().Fatal(err.Error())
 				}
 
-				// check all fields
-				if checkCount.Count == logCount.Count &&
-					checkCount.Id == logCount.Id {
-					// Success
-					break
-				} else {
-					// Wait
-
-					zap.S().Warn("Models did not match")
-					zap.S().Warn("Waiting 100ms...")
-					time.Sleep(100 * time.Millisecond)
-					continue
-				}
+				zap.S().Debug("Loader=LogCount, TransactionHash=", newLogCount.TransactionHash, " LogIndex=", newLogCount.LogIndex, " - Insert")
+			} else if err != nil {
+				// Error
+				zap.S().Fatal(err.Error())
 			}
 		}
 	}()

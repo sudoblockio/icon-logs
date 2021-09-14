@@ -21,18 +21,17 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type LogORM struct {
-	Address          string `gorm:"index:idx_address"`
+	Address          string `gorm:"index:log_idx_address"`
 	BlockHash        string
-	BlockNumber      uint64 `gorm:"index:idx_block_number"`
+	BlockNumber      uint64 `gorm:"index:log_idx_block_number"`
 	BlockTimestamp   uint64
 	Data             string
-	Id               uint64
 	Indexed          string
 	ItemId           string
 	ItemTimestamp    string
-	LogIndex         uint64 `gorm:"index:idx_log_index"`
+	LogIndex         uint64 `gorm:"primary_key"`
 	Method           string
-	TransactionHash  string `gorm:"index:idx_transaction_hash"`
+	TransactionHash  string `gorm:"primary_key"`
 	TransactionIndex uint32
 	Type             string
 }
@@ -65,7 +64,6 @@ func (m *Log) ToORM(ctx context.Context) (LogORM, error) {
 	to.ItemId = m.ItemId
 	to.ItemTimestamp = m.ItemTimestamp
 	to.Method = m.Method
-	to.Id = m.Id
 	if posthook, ok := interface{}(m).(LogWithAfterToORM); ok {
 		err = posthook.AfterToORM(ctx, &to)
 	}
@@ -95,7 +93,6 @@ func (m *LogORM) ToPB(ctx context.Context) (Log, error) {
 	to.ItemId = m.ItemId
 	to.ItemTimestamp = m.ItemTimestamp
 	to.Method = m.Method
-	to.Id = m.Id
 	if posthook, ok := interface{}(m).(LogWithAfterToPB); ok {
 		err = posthook.AfterToPB(ctx, &to)
 	}
@@ -156,245 +153,6 @@ type LogORMWithBeforeCreate_ interface {
 }
 type LogORMWithAfterCreate_ interface {
 	AfterCreate_(context.Context, *gorm1.DB) error
-}
-
-// DefaultReadLog executes a basic gorm read call
-func DefaultReadLog(ctx context.Context, in *Log, db *gorm1.DB) (*Log, error) {
-	if in == nil {
-		return nil, errors1.NilArgumentError
-	}
-	ormObj, err := in.ToORM(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if ormObj.Id == 0 {
-		return nil, errors1.EmptyIdError
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithBeforeReadApplyQuery); ok {
-		if db, err = hook.BeforeReadApplyQuery(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	if db, err = gorm2.ApplyFieldSelection(ctx, db, nil, &LogORM{}); err != nil {
-		return nil, err
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithBeforeReadFind); ok {
-		if db, err = hook.BeforeReadFind(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	ormResponse := LogORM{}
-	if err = db.Where(&ormObj).First(&ormResponse).Error; err != nil {
-		return nil, err
-	}
-	if hook, ok := interface{}(&ormResponse).(LogORMWithAfterReadFind); ok {
-		if err = hook.AfterReadFind(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	pbResponse, err := ormResponse.ToPB(ctx)
-	return &pbResponse, err
-}
-
-type LogORMWithBeforeReadApplyQuery interface {
-	BeforeReadApplyQuery(context.Context, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithBeforeReadFind interface {
-	BeforeReadFind(context.Context, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithAfterReadFind interface {
-	AfterReadFind(context.Context, *gorm1.DB) error
-}
-
-func DefaultDeleteLog(ctx context.Context, in *Log, db *gorm1.DB) error {
-	if in == nil {
-		return errors1.NilArgumentError
-	}
-	ormObj, err := in.ToORM(ctx)
-	if err != nil {
-		return err
-	}
-	if ormObj.Id == 0 {
-		return errors1.EmptyIdError
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithBeforeDelete_); ok {
-		if db, err = hook.BeforeDelete_(ctx, db); err != nil {
-			return err
-		}
-	}
-	err = db.Where(&ormObj).Delete(&LogORM{}).Error
-	if err != nil {
-		return err
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithAfterDelete_); ok {
-		err = hook.AfterDelete_(ctx, db)
-	}
-	return err
-}
-
-type LogORMWithBeforeDelete_ interface {
-	BeforeDelete_(context.Context, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithAfterDelete_ interface {
-	AfterDelete_(context.Context, *gorm1.DB) error
-}
-
-func DefaultDeleteLogSet(ctx context.Context, in []*Log, db *gorm1.DB) error {
-	if in == nil {
-		return errors1.NilArgumentError
-	}
-	var err error
-	keys := []uint64{}
-	for _, obj := range in {
-		ormObj, err := obj.ToORM(ctx)
-		if err != nil {
-			return err
-		}
-		if ormObj.Id == 0 {
-			return errors1.EmptyIdError
-		}
-		keys = append(keys, ormObj.Id)
-	}
-	if hook, ok := (interface{}(&LogORM{})).(LogORMWithBeforeDeleteSet); ok {
-		if db, err = hook.BeforeDeleteSet(ctx, in, db); err != nil {
-			return err
-		}
-	}
-	err = db.Where("id in (?)", keys).Delete(&LogORM{}).Error
-	if err != nil {
-		return err
-	}
-	if hook, ok := (interface{}(&LogORM{})).(LogORMWithAfterDeleteSet); ok {
-		err = hook.AfterDeleteSet(ctx, in, db)
-	}
-	return err
-}
-
-type LogORMWithBeforeDeleteSet interface {
-	BeforeDeleteSet(context.Context, []*Log, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithAfterDeleteSet interface {
-	AfterDeleteSet(context.Context, []*Log, *gorm1.DB) error
-}
-
-// DefaultStrictUpdateLog clears / replaces / appends first level 1:many children and then executes a gorm update call
-func DefaultStrictUpdateLog(ctx context.Context, in *Log, db *gorm1.DB) (*Log, error) {
-	if in == nil {
-		return nil, fmt.Errorf("Nil argument to DefaultStrictUpdateLog")
-	}
-	ormObj, err := in.ToORM(ctx)
-	if err != nil {
-		return nil, err
-	}
-	lockedRow := &LogORM{}
-	db.Model(&ormObj).Set("gorm:query_option", "FOR UPDATE").Where("id=?", ormObj.Id).First(lockedRow)
-	if hook, ok := interface{}(&ormObj).(LogORMWithBeforeStrictUpdateCleanup); ok {
-		if db, err = hook.BeforeStrictUpdateCleanup(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithBeforeStrictUpdateSave); ok {
-		if db, err = hook.BeforeStrictUpdateSave(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	if err = db.Save(&ormObj).Error; err != nil {
-		return nil, err
-	}
-	if hook, ok := interface{}(&ormObj).(LogORMWithAfterStrictUpdateSave); ok {
-		if err = hook.AfterStrictUpdateSave(ctx, db); err != nil {
-			return nil, err
-		}
-	}
-	pbResponse, err := ormObj.ToPB(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &pbResponse, err
-}
-
-type LogORMWithBeforeStrictUpdateCleanup interface {
-	BeforeStrictUpdateCleanup(context.Context, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithBeforeStrictUpdateSave interface {
-	BeforeStrictUpdateSave(context.Context, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogORMWithAfterStrictUpdateSave interface {
-	AfterStrictUpdateSave(context.Context, *gorm1.DB) error
-}
-
-// DefaultPatchLog executes a basic gorm update call with patch behavior
-func DefaultPatchLog(ctx context.Context, in *Log, updateMask *field_mask1.FieldMask, db *gorm1.DB) (*Log, error) {
-	if in == nil {
-		return nil, errors1.NilArgumentError
-	}
-	var pbObj Log
-	var err error
-	if hook, ok := interface{}(&pbObj).(LogWithBeforePatchRead); ok {
-		if db, err = hook.BeforePatchRead(ctx, in, updateMask, db); err != nil {
-			return nil, err
-		}
-	}
-	pbReadRes, err := DefaultReadLog(ctx, &Log{Id: in.GetId()}, db)
-	if err != nil {
-		return nil, err
-	}
-	pbObj = *pbReadRes
-	if hook, ok := interface{}(&pbObj).(LogWithBeforePatchApplyFieldMask); ok {
-		if db, err = hook.BeforePatchApplyFieldMask(ctx, in, updateMask, db); err != nil {
-			return nil, err
-		}
-	}
-	if _, err := DefaultApplyFieldMaskLog(ctx, &pbObj, in, updateMask, "", db); err != nil {
-		return nil, err
-	}
-	if hook, ok := interface{}(&pbObj).(LogWithBeforePatchSave); ok {
-		if db, err = hook.BeforePatchSave(ctx, in, updateMask, db); err != nil {
-			return nil, err
-		}
-	}
-	pbResponse, err := DefaultStrictUpdateLog(ctx, &pbObj, db)
-	if err != nil {
-		return nil, err
-	}
-	if hook, ok := interface{}(pbResponse).(LogWithAfterPatchSave); ok {
-		if err = hook.AfterPatchSave(ctx, in, updateMask, db); err != nil {
-			return nil, err
-		}
-	}
-	return pbResponse, nil
-}
-
-type LogWithBeforePatchRead interface {
-	BeforePatchRead(context.Context, *Log, *field_mask1.FieldMask, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogWithBeforePatchApplyFieldMask interface {
-	BeforePatchApplyFieldMask(context.Context, *Log, *field_mask1.FieldMask, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogWithBeforePatchSave interface {
-	BeforePatchSave(context.Context, *Log, *field_mask1.FieldMask, *gorm1.DB) (*gorm1.DB, error)
-}
-type LogWithAfterPatchSave interface {
-	AfterPatchSave(context.Context, *Log, *field_mask1.FieldMask, *gorm1.DB) error
-}
-
-// DefaultPatchSetLog executes a bulk gorm update call with patch behavior
-func DefaultPatchSetLog(ctx context.Context, objects []*Log, updateMasks []*field_mask1.FieldMask, db *gorm1.DB) ([]*Log, error) {
-	if len(objects) != len(updateMasks) {
-		return nil, fmt.Errorf(errors1.BadRepeatedFieldMaskTpl, len(updateMasks), len(objects))
-	}
-
-	results := make([]*Log, 0, len(objects))
-	for i, patcher := range objects {
-		pbResponse, err := DefaultPatchLog(ctx, patcher, updateMasks[i], db)
-		if err != nil {
-			return nil, err
-		}
-
-		results = append(results, pbResponse)
-	}
-
-	return results, nil
 }
 
 // DefaultApplyFieldMaskLog patches an pbObject with patcher according to a field mask.
@@ -458,10 +216,6 @@ func DefaultApplyFieldMaskLog(ctx context.Context, patchee *Log, patcher *Log, u
 			patchee.Method = patcher.Method
 			continue
 		}
-		if f == prefix+"Id" {
-			patchee.Id = patcher.Id
-			continue
-		}
 	}
 	if err != nil {
 		return nil, err
@@ -491,7 +245,7 @@ func DefaultListLog(ctx context.Context, db *gorm1.DB) ([]*Log, error) {
 		}
 	}
 	db = db.Where(&ormObj)
-	db = db.Order("id")
+	db = db.Order("log_index")
 	ormResponse := []LogORM{}
 	if err := db.Find(&ormResponse).Error; err != nil {
 		return nil, err

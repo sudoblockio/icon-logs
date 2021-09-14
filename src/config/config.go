@@ -34,7 +34,7 @@ type configType struct {
 	LogFormat   string `envconfig:"LOG_FORMAT" required:"false" default:"json"`
 
 	// Kafka
-	KafkaBrokerURL    string `envconfig:"KAFKA_BROKER_URL" required:"false" default:"localhost:9092"`
+	KafkaBrokerURL    string `envconfig:"KAFKA_BROKER_URL" required:"false" default:"localhost:29092"`
 	SchemaRegistryURL string `envconfig:"SCHEMA_REGISTRY_URL" required:"false" default:"localhost:8081"`
 	KafkaGroupID      string `envconfig:"KAFKA_GROUP_ID" required:"false" default:"logs-service"`
 
@@ -58,8 +58,8 @@ type configType struct {
 	DbTimezone string `envconfig:"DB_TIMEZONE" required:"false" default:"UTC"`
 
 	// Redis
-	RedisHost                     string `envconfig:"REDIS_HOST" required:"false" default:"redis"`
-	RedisPort                     string `envconfig:"REDIS_PORT" required:"false" default:"6380"`
+	RedisHost                     string `envconfig:"REDIS_HOST" required:"false" default:"localhost"`
+	RedisPort                     string `envconfig:"REDIS_PORT" required:"false" default:"6379"`
 	RedisPassword                 string `envconfig:"REDIS_PASSWORD" required:"false" default:""`
 	RedisChannel                  string `envconfig:"REDIS_CHANNEL" required:"false" default:"logs"`
 	RedisSentinelClientMode       bool   `envconfig:"REDIS_SENTINEL_CLIENT_MODE" required:"false" default:"false"`

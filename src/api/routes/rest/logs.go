@@ -9,7 +9,6 @@ import (
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
-	"github.com/geometry-labs/icon-logs/models"
 )
 
 type LogsQuery struct {
@@ -74,7 +73,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		return c.SendString(`{"error": "could not retrieve logs"}`)
 	}
 
-	if len(logs) == 0 {
+	if len(*logs) == 0 {
 		// No Content
 		c.Status(204)
 	}
@@ -83,20 +82,26 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	if count != -1 {
 		// Filters given, count some
 		c.Append("X-TOTAL-COUNT", strconv.FormatInt(count, 10))
+	} else if count == -1 && params.ScoreAddress != "" {
+		// Use Log count by address for count
+		counter, err := crud.GetLogCountByAddressModel().SelectLargestCountByAddress(params.ScoreAddress)
+		if err != nil {
+			counter = 0
+			zap.S().Warn("Could not retrieve log count by address: ", params.ScoreAddress, " Error: ", err.Error())
+		}
+
+		c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter, 10))
 	} else {
 		// No filters given, count all
 		// Total count in the log_counts table
-		counter, err := crud.GetLogCountModel().Select()
+		counter, err := crud.GetLogCountModel().SelectLargestCount()
 		if err != nil {
-			counter = models.LogCount{
-				Count: 0,
-				Id:    0,
-			}
+			counter = 0
 			zap.S().Warn("Could not retrieve log count: ", err.Error())
 		}
-		c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter.Count, 10))
+		c.Append("X-TOTAL-COUNT", strconv.FormatUint(counter, 10))
 	}
 
-	body, _ := json.Marshal(&logs)
+	body, _ := json.Marshal(logs)
 	return c.SendString(string(body))
 }

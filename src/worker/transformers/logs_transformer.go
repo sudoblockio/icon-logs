@@ -28,6 +28,7 @@ func logsTransformer() {
 	// Output channels
 	logLoaderChan := crud.GetLogModel().WriteChan
 	logCountLoaderChan := crud.GetLogCountModel().WriteChan
+	logCountByAddressLoaderChan := crud.GetLogCountByAddressModel().WriteChan
 	redisClient := redis.GetRedisClient()
 
 	zap.S().Debug("Logs Worker: started working")
@@ -53,11 +54,12 @@ func logsTransformer() {
 		logLoaderChan <- log
 
 		// Load log counter to Postgres
-		logCount := &models.LogCount{
-			Count: 1, // Adds with current
-			Id:    1, // Only one row
-		}
+		logCount := transformLogToLogCount(log)
 		logCountLoaderChan <- logCount
+
+		// Load log counter by address to Posgress
+		logCountByAddress := transformLogToLogCountByAddress(log)
+		logCountByAddressLoaderChan <- logCountByAddress
 
 		zap.S().Debug("Logs worker: last seen log #", string(consumerTopicMsg.Key))
 	}
@@ -117,5 +119,20 @@ func transformLogToLogWS(log *models.Log) *models.LogWebsocket {
 		BlockTimestamp:   log.BlockTimestamp,
 		BlockHash:        log.BlockHash,
 		Method:           log.Method,
+	}
+}
+
+func transformLogToLogCount(log *models.Log) *models.LogCount {
+	return &models.LogCount{
+		TransactionHash: log.TransactionHash,
+		LogIndex:        log.LogIndex,
+	}
+}
+
+func transformLogToLogCountByAddress(log *models.Log) *models.LogCountByAddress {
+	return &models.LogCountByAddress{
+		LogIndex:        log.LogIndex,
+		TransactionHash: log.TransactionHash,
+		Address:         log.Address,
 	}
 }

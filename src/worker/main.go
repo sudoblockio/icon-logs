@@ -24,6 +24,7 @@ func main() {
 	// Start Mongodb loaders
 	crud.StartLogLoader()
 	crud.StartLogCountLoader()
+	crud.StartLogCountByAddressLoader()
 
 	// Start kafka consumer
 	kafka.StartWorkerConsumers()
