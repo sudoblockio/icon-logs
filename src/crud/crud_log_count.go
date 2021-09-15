@@ -39,6 +39,8 @@ func GetLogCountModel() *LogCountModel {
 		if err != nil {
 			zap.S().Fatal("LogCountModel: Unable migrate postgres table: ", err.Error())
 		}
+
+		StartLogCountLoader()
 	})
 
 	return logCountModel

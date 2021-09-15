@@ -39,6 +39,8 @@ func GetLogModel() *LogModel {
 		if err != nil {
 			zap.S().Fatal("LogModel: Unable migrate postgres table: ", err.Error())
 		}
+
+		StartLogLoader()
 	})
 
 	return logModel

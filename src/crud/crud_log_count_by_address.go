@@ -39,6 +39,8 @@ func GetLogCountByAddressModel() *LogCountByAddressModel {
 		if err != nil {
 			zap.S().Fatal("LogCountByAddressModel: Unable migrate postgres table: ", err.Error())
 		}
+
+		StartLogCountByAddressLoader()
 	})
 
 	return logCountByAddressModel
