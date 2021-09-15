@@ -50,14 +50,14 @@ func logsTransformer() {
 		logWebsocketJSON, _ := json.Marshal(logWebsocket)
 		redisClient.Publish(logWebsocketJSON)
 
-		// Load log to Postgres
+		// Loads to: logs
 		logLoaderChan <- log
 
-		// Load log counter to Postgres
+		// Loads to: log_counts
 		logCount := transformLogToLogCount(log)
 		logCountLoaderChan <- logCount
 
-		// Load log counter by address to Posgress
+		// Loads to: log_count_by_addresses
 		logCountByAddress := transformLogToLogCountByAddress(log)
 		logCountByAddressLoaderChan <- logCountByAddress
 
