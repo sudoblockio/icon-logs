@@ -68,6 +68,9 @@ func (m *LogModel) Insert(log *models.Log) error {
 func (m *LogModel) SelectMany(
 	limit int,
 	skip int,
+	blockNumber uint32,
+	blockStartNumber uint32,
+	blockEndNumber uint32,
 	transactionHash string,
 	scoreAddress string,
 ) (*[]models.Log, int64, error) {
@@ -79,6 +82,24 @@ func (m *LogModel) SelectMany(
 
 	// Latest logs first
 	db = db.Order("block_number desc")
+
+	// Number
+	if blockNumber != 0 {
+		computeCount = true
+		db = db.Where("block_number = ?", blockNumber)
+	}
+
+	// Start number and end number
+	if blockStartNumber != 0 && blockEndNumber != 0 {
+		computeCount = true
+		db = db.Where("block_number BETWEEN ? AND ?", blockStartNumber, blockEndNumber)
+	} else if blockStartNumber != 0 {
+		computeCount = true
+		db = db.Where("block_number > ?", blockStartNumber)
+	} else if blockEndNumber != 0 {
+		computeCount = true
+		db = db.Where("block_number < ?", blockEndNumber)
+	}
 
 	// Hash
 	if transactionHash != "" {
