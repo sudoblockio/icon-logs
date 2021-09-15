@@ -68,8 +68,8 @@ func (m *LogModel) Insert(log *models.Log) error {
 func (m *LogModel) SelectMany(
 	limit int,
 	skip int,
-	txHash string,
-	scoreAddr string,
+	transactionHash string,
+	scoreAddress string,
 ) (*[]models.Log, int64, error) {
 	db := m.db
 	computeCount := false
@@ -81,15 +81,15 @@ func (m *LogModel) SelectMany(
 	db = db.Order("block_number desc")
 
 	// Hash
-	if txHash != "" {
+	if transactionHash != "" {
 		computeCount = true
-		db = db.Where("transaction_hash = ?", txHash)
+		db = db.Where("transaction_hash = ?", transactionHash)
 	}
 
 	// Address
-	if scoreAddr != "" {
+	if scoreAddress != "" {
 		// NOTE: addresses many have large counts, use log_count_by_addresses
-		db = db.Where("address = ?", scoreAddr)
+		db = db.Where("address = ?", scoreAddress)
 	}
 
 	// Count, if needed
@@ -115,7 +115,7 @@ func (m *LogModel) SelectMany(
 }
 
 func (m *LogModel) SelectOne(
-	txHash string,
+	transactionHash string,
 	logIndex uint64,
 ) (*models.Log, error) {
 	db := m.db
@@ -123,7 +123,7 @@ func (m *LogModel) SelectOne(
 	// Set table
 	db = db.Model(&models.Log{})
 
-	db = db.Where("transaction_hash = ?", txHash)
+	db = db.Where("transaction_hash = ?", transactionHash)
 
 	db = db.Where("log_index = ?", logIndex)
 

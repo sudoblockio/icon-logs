@@ -3,10 +3,12 @@ package transformers
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
@@ -45,10 +47,16 @@ func logsTransformer() {
 		// Transform logic
 		log := transformLogRawToLog(logRaw)
 
-		// Push to redis
-		logWebsocket := transformLogToLogWS(log)
-		logWebsocketJSON, _ := json.Marshal(logWebsocket)
-		redisClient.Publish(logWebsocketJSON)
+		// Loads to: redis logs channel
+		// Check if entry log is in logs table
+		_, err = crud.GetLogModel().SelectOne(log.TransactionHash, log.LogIndex)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Push to redis
+			logWebsocket := transformLogToLogWS(log)
+			logWebsocketJSON, _ := json.Marshal(logWebsocket)
+
+			redisClient.Publish(logWebsocketJSON)
+		}
 
 		// Loads to: logs
 		logLoaderChan <- log
