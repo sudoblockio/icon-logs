@@ -3,18 +3,15 @@ package transformers
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
 	"github.com/geometry-labs/icon-logs/kafka"
 	"github.com/geometry-labs/icon-logs/models"
-	"github.com/geometry-labs/icon-logs/redis"
 )
 
 func StartLogsTransformer() {
@@ -29,9 +26,9 @@ func logsTransformer() {
 
 	// Output channels
 	logLoaderChan := crud.GetLogModel().WriteChan
+	logWebsocketLoaderChan := crud.GetLogWebsocketIndexModel().WriteChan
 	logCountLoaderChan := crud.GetLogCountModel().WriteChan
 	logCountByAddressLoaderChan := crud.GetLogCountByAddressModel().WriteChan
-	redisClient := redis.GetRedisClient()
 
 	zap.S().Debug("Logs Worker: started working")
 	for {
@@ -44,22 +41,13 @@ func logsTransformer() {
 			zap.S().Fatal("Logs Worker: Unable to proceed cannot convert kafka msg value to LogRaw, err: ", err.Error())
 		}
 
-		// Transform logic
-		log := transformLogRawToLog(logRaw)
-
-		// Loads to: redis logs channel
-		// Check if entry log is in logs table
-		_, err = crud.GetLogModel().SelectOne(log.TransactionHash, log.LogIndex)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Push to redis
-			logWebsocket := transformLogToLogWS(log)
-			logWebsocketJSON, _ := json.Marshal(logWebsocket)
-
-			redisClient.Publish(logWebsocketJSON)
-		}
-
 		// Loads to: logs
+		log := transformLogRawToLog(logRaw)
 		logLoaderChan <- log
+
+		// Loads to: log_websockets
+		logWebsocket := transformLogToLogWS(log)
+		logWebsocketLoaderChan <- logWebsocket
 
 		// Loads to: log_counts
 		logCount := transformLogToLogCount(log)

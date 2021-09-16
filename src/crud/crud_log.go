@@ -179,11 +179,10 @@ func (m *LogModel) UpdateOne(
 // StartLogLoader starts loader
 func StartLogLoader() {
 	go func() {
-		postgresLoaderChan := GetLogModel().WriteChan
 
 		for {
 			// Read transaction
-			newLog := <-postgresLoaderChan
+			newLog := <-GetLogModel().WriteChan
 
 			// Update/Insert
 			_, err := GetLogModel().SelectOne(newLog.TransactionHash, newLog.LogIndex)
