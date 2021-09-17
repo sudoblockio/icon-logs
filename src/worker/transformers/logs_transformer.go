@@ -87,6 +87,7 @@ func transformLogRawToLog(logRaw *models.LogRaw) *models.Log {
 	return &models.Log{
 		Type:             logRaw.Type,
 		LogIndex:         logRaw.LogIndex,
+		MaxLogIndex:      logRaw.MaxLogIndex,
 		TransactionHash:  logRaw.TransactionHash,
 		TransactionIndex: logRaw.TransactionIndex,
 		Address:          logRaw.Address,

@@ -30,6 +30,7 @@ type LogORM struct {
 	ItemId           string
 	ItemTimestamp    string
 	LogIndex         uint64 `gorm:"primary_key"`
+	MaxLogIndex      uint64
 	Method           string
 	TransactionHash  string `gorm:"primary_key"`
 	TransactionIndex uint32
@@ -53,6 +54,7 @@ func (m *Log) ToORM(ctx context.Context) (LogORM, error) {
 	}
 	to.Type = m.Type
 	to.LogIndex = m.LogIndex
+	to.MaxLogIndex = m.MaxLogIndex
 	to.TransactionHash = m.TransactionHash
 	to.TransactionIndex = m.TransactionIndex
 	to.Address = m.Address
@@ -82,6 +84,7 @@ func (m *LogORM) ToPB(ctx context.Context) (Log, error) {
 	}
 	to.Type = m.Type
 	to.LogIndex = m.LogIndex
+	to.MaxLogIndex = m.MaxLogIndex
 	to.TransactionHash = m.TransactionHash
 	to.TransactionIndex = m.TransactionIndex
 	to.Address = m.Address
@@ -170,6 +173,10 @@ func DefaultApplyFieldMaskLog(ctx context.Context, patchee *Log, patcher *Log, u
 		}
 		if f == prefix+"LogIndex" {
 			patchee.LogIndex = patcher.LogIndex
+			continue
+		}
+		if f == prefix+"MaxLogIndex" {
+			patchee.MaxLogIndex = patcher.MaxLogIndex
 			continue
 		}
 		if f == prefix+"TransactionHash" {

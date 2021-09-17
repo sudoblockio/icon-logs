@@ -110,8 +110,8 @@ func StartLogWebsocketIndexLoader() {
 				// Publish to redis
 				newLogWebsocketJSON, _ := json.Marshal(newLogWebsocket)
 				redis.GetRedisClient().Publish(newLogWebsocketJSON)
-			} else {
-				// Postgress error
+			} else if err != nil {
+				// Postgres error
 				zap.S().Fatal(err.Error())
 			}
 		}
