@@ -58,7 +58,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 
 	// Default Params
 	if params.Limit <= 0 {
-		params.Limit = 1
+		params.Limit = 25
 	}
 
 	// Check Params
