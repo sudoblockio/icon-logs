@@ -12,10 +12,10 @@ import (
 
 // LogCountModel - type for log table model
 type LogCountModel struct {
-	db        *gorm.DB
-	model     *models.LogCount
-	modelORM  *models.LogCountORM
-	WriteChan chan *models.LogCount
+	db            *gorm.DB
+	model         *models.LogCount
+	modelORM      *models.LogCountORM
+	LoaderChannel chan *models.LogCount
 }
 
 var logCountModel *LogCountModel
@@ -30,9 +30,9 @@ func GetLogCountModel() *LogCountModel {
 		}
 
 		logCountModel = &LogCountModel{
-			db:        dbConn,
-			model:     &models.LogCount{},
-			WriteChan: make(chan *models.LogCount, 1),
+			db:            dbConn,
+			model:         &models.LogCount{},
+			LoaderChannel: make(chan *models.LogCount, 1),
 		}
 
 		err := logCountModel.Migrate()
@@ -127,7 +127,7 @@ func StartLogCountLoader() {
 
 		for {
 			// Read logCount
-			newLogCount := <-GetLogCountModel().WriteChan
+			newLogCount := <-GetLogCountModel().LoaderChannel
 
 			// Insert
 			_, err := GetLogCountModel().SelectOne(

@@ -14,10 +14,10 @@ import (
 
 // LogWebsocketIndexModel - type for logWebsocketIndex table model
 type LogWebsocketIndexModel struct {
-	db        *gorm.DB
-	model     *models.LogWebsocketIndex
-	modelORM  *models.LogWebsocketIndexORM
-	WriteChan chan *models.LogWebsocket // Write LogWebsocket to create a LogWebsocketIndex
+	db            *gorm.DB
+	model         *models.LogWebsocketIndex
+	modelORM      *models.LogWebsocketIndexORM
+	LoaderChannel chan *models.LogWebsocket // Write LogWebsocket to create a LogWebsocketIndex
 }
 
 var logWebsocketIndexModel *LogWebsocketIndexModel
@@ -32,9 +32,9 @@ func GetLogWebsocketIndexModel() *LogWebsocketIndexModel {
 		}
 
 		logWebsocketIndexModel = &LogWebsocketIndexModel{
-			db:        dbConn,
-			model:     &models.LogWebsocketIndex{},
-			WriteChan: make(chan *models.LogWebsocket, 1),
+			db:            dbConn,
+			model:         &models.LogWebsocketIndex{},
+			LoaderChannel: make(chan *models.LogWebsocket, 1),
 		}
 
 		err := logWebsocketIndexModel.Migrate()
@@ -92,7 +92,7 @@ func StartLogWebsocketIndexLoader() {
 
 		for {
 			// Read transaction
-			newLogWebsocket := <-GetLogWebsocketIndexModel().WriteChan
+			newLogWebsocket := <-GetLogWebsocketIndexModel().LoaderChannel
 
 			// LogWebsocket -> LogWebsocketIndex
 			newLogWebsocketIndex := &models.LogWebsocketIndex{

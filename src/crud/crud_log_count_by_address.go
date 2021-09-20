@@ -12,10 +12,10 @@ import (
 
 // LogCountByAddressModel - type for logCountByAddress table model
 type LogCountByAddressModel struct {
-	db        *gorm.DB
-	model     *models.LogCountByAddress
-	modelORM  *models.LogCountByAddressORM
-	WriteChan chan *models.LogCountByAddress
+	db            *gorm.DB
+	model         *models.LogCountByAddress
+	modelORM      *models.LogCountByAddressORM
+	LoaderChannel chan *models.LogCountByAddress
 }
 
 var logCountByAddressModel *LogCountByAddressModel
@@ -30,9 +30,9 @@ func GetLogCountByAddressModel() *LogCountByAddressModel {
 		}
 
 		logCountByAddressModel = &LogCountByAddressModel{
-			db:        dbConn,
-			model:     &models.LogCountByAddress{},
-			WriteChan: make(chan *models.LogCountByAddress, 1),
+			db:            dbConn,
+			model:         &models.LogCountByAddress{},
+			LoaderChannel: make(chan *models.LogCountByAddress, 1),
 		}
 
 		err := logCountByAddressModel.Migrate()
@@ -133,7 +133,7 @@ func StartLogCountByAddressLoader() {
 
 		for {
 			// Read transaction
-			newLogCountByAddress := <-GetLogCountByAddressModel().WriteChan
+			newLogCountByAddress := <-GetLogCountByAddressModel().LoaderChannel
 
 			// Insert
 			_, err := GetLogCountByAddressModel().SelectOne(

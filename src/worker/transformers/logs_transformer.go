@@ -22,13 +22,13 @@ func logsTransformer() {
 	consumerTopicNameLogs := config.Config.ConsumerTopicLogs
 
 	// Input Channels
-	consumerTopicChanLogs := kafka.KafkaTopicConsumers[consumerTopicNameLogs].TopicChan
+	consumerTopicChanLogs := kafka.KafkaTopicConsumers[consumerTopicNameLogs].TopicChannel
 
 	// Output channels
-	logLoaderChan := crud.GetLogModel().WriteChan
-	logWebsocketLoaderChan := crud.GetLogWebsocketIndexModel().WriteChan
-	logCountLoaderChan := crud.GetLogCountModel().WriteChan
-	logCountByAddressLoaderChan := crud.GetLogCountByAddressModel().WriteChan
+	logLoaderChan := crud.GetLogModel().LoaderChannel
+	logWebsocketLoaderChan := crud.GetLogWebsocketIndexModel().LoaderChannel
+	logCountLoaderChan := crud.GetLogCountModel().LoaderChannel
+	logCountByAddressLoaderChan := crud.GetLogCountByAddressModel().LoaderChannel
 
 	zap.S().Debug("Logs Worker: started working")
 	for {
@@ -45,7 +45,7 @@ func logsTransformer() {
 		log := transformLogRawToLog(logRaw)
 		logLoaderChan <- log
 
-		// Loads to: log_websockets
+		// Loads to: log_websocket_indices
 		logWebsocket := transformLogToLogWS(log)
 		logWebsocketLoaderChan <- logWebsocket
 

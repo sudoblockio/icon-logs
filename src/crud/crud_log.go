@@ -12,10 +12,10 @@ import (
 
 // LogModel - type for log table model
 type LogModel struct {
-	db        *gorm.DB
-	model     *models.Log
-	modelORM  *models.LogORM
-	WriteChan chan *models.Log
+	db            *gorm.DB
+	model         *models.Log
+	modelORM      *models.LogORM
+	LoaderChannel chan *models.Log
 }
 
 var logModel *LogModel
@@ -30,9 +30,9 @@ func GetLogModel() *LogModel {
 		}
 
 		logModel = &LogModel{
-			db:        dbConn,
-			model:     &models.Log{},
-			WriteChan: make(chan *models.Log, 1),
+			db:            dbConn,
+			model:         &models.Log{},
+			LoaderChannel: make(chan *models.Log, 1),
 		}
 
 		err := logModel.Migrate()
@@ -182,7 +182,7 @@ func StartLogLoader() {
 
 		for {
 			// Read transaction
-			newLog := <-GetLogModel().WriteChan
+			newLog := <-GetLogModel().LoaderChannel
 
 			// Update/Insert
 			_, err := GetLogModel().SelectOne(newLog.TransactionHash, newLog.LogIndex)

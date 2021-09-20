@@ -120,7 +120,7 @@ func TestLogCountModelLoader(t *testing.T) {
 		for {
 			logCountFixture.LogIndex += 1
 
-			logCountModel.WriteChan <- logCountFixture
+			logCountModel.LoaderChannel <- logCountFixture
 			time.Sleep(1)
 
 			i++
