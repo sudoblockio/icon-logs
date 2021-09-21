@@ -4,10 +4,6 @@ x-env: &env
   NAME: "logs"
   NETWORK_NAME: "mainnet"
 
-  # Ports
-  PORT: "8000"
-  HEALTH_PORT: "8180"
-  METRICS_PORT: "9400"
 
   # Prefix
   REST_PREFIX: "/api/v1"
@@ -33,6 +29,7 @@ x-env: &env
   KAFKA_GROUP_ID: "logs-service"
 
   # Topics
+  CONSUMER_TOPICS: "logs"
   SCHEMA_NAME_TOPICS: "logs-ws:logs"
   SCHEMA_FOLDER_PATH: "/app/schemas/"
 
@@ -77,7 +74,10 @@ services:
       - ${LOGS_CONTEXT:-.}/src:/app
     environment:
       <<: *env
-      CONSUMER_TOPICS: "logs-ws"
+      # Ports
+      PORT: "8000"
+      HEALTH_PORT: "8180"
+      METRICS_PORT: "9400"
 
   logs-worker:
     build:
@@ -97,5 +97,7 @@ services:
       - ${LOGS_CONTEXT:-.}/src:/app
     environment:
       <<: *env
-      CONSUMER_TOPICS: "logs"
-      PRODUCER_TOPICS: "logs-ws"
+      # Ports
+      PORT: "8001"
+      HEALTH_PORT: "8181"
+      METRICS_PORT: "9401"

@@ -11,6 +11,7 @@ import (
 	"github.com/geometry-labs/icon-logs/config"
 	"github.com/geometry-labs/icon-logs/crud"
 	"github.com/geometry-labs/icon-logs/kafka"
+	"github.com/geometry-labs/icon-logs/metrics"
 	"github.com/geometry-labs/icon-logs/models"
 )
 
@@ -32,14 +33,20 @@ func logsTransformer() {
 
 	zap.S().Debug("Logs Worker: started working")
 	for {
-		// Read from kafka
-		consumerTopicMsg := <-consumerTopicChanLogs
 
-		// Log message from ETL
+		///////////////////
+		// Kafka Message //
+		///////////////////
+
+		consumerTopicMsg := <-consumerTopicChanLogs
 		logRaw, err := convertBytesToLogRawProtoBuf(consumerTopicMsg.Value)
 		if err != nil {
 			zap.S().Fatal("Logs Worker: Unable to proceed cannot convert kafka msg value to LogRaw, err: ", err.Error())
 		}
+
+		/////////////
+		// Loaders //
+		/////////////
 
 		// Loads to: logs
 		log := transformLogRawToLog(logRaw)
@@ -57,7 +64,11 @@ func logsTransformer() {
 		logCountByAddress := transformLogToLogCountByAddress(log)
 		logCountByAddressLoaderChan <- logCountByAddress
 
-		zap.S().Debug("Logs worker: last seen log #", string(consumerTopicMsg.Key))
+		/////////////
+		// Metrics //
+		/////////////
+		metrics.MaxBlockNumberLogsRawGauge.Set(float64(logRaw.BlockNumber))
+
 	}
 }
 
