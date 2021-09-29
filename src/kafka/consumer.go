@@ -128,7 +128,8 @@ func (c *ClaimConsumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sar
 		select {
 		case msg := <-claim.Messages():
 			if msg == nil {
-				zap.S().Info("GROUP=", c.group, ",TOPIC=", c.topicName, " - claim message was nil...")
+				zap.S().Info("GROUP=", c.group, ",TOPIC=", c.topicName, " - claim message was nil...sleeping 5 seconds")
+				time.Sleep(5 * time.Second)
 				continue
 			}
 			topicMsg = msg
