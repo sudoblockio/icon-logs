@@ -119,7 +119,19 @@ type ClaimConsumer struct {
 	group       string
 }
 
-func (*ClaimConsumer) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
+func (c *ClaimConsumer) Setup(sess sarama.ConsumerGroupSession) error {
+
+	// Reset offsets
+	if c.startOffset == 0 {
+		partitions := sess.Claims()[c.topicName]
+
+		for _, p := range partitions {
+			sess.ResetOffset(c.topicName, p, 0, "reset")
+		}
+	}
+
+	return nil
+}
 func (*ClaimConsumer) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
 func (c *ClaimConsumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 
@@ -127,26 +139,14 @@ func (c *ClaimConsumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sar
 		var topicMsg *sarama.ConsumerMessage
 		select {
 		case msg := <-claim.Messages():
-			if msg == nil {
-				zap.S().Info("GROUP=", c.group, ",TOPIC=", c.topicName, " - claim message was nil...sleeping 5 seconds")
-				time.Sleep(5 * time.Second)
-				continue
-			}
 			topicMsg = msg
 		case <-time.After(5 * time.Second):
 			zap.S().Info("GROUP=", c.group, ",TOPIC=", c.topicName, " - No new kafka messages, waited 5 secs...")
 			continue
 		}
 
-		zap.S().Debug("GROUP=", c.group, ",TOPIC=", c.topicName, ",PARTITION=", topicMsg.Partition, ",OFFSET=", topicMsg.Offset, " - New message")
-
-		// Commit offset
-		if c.startOffset != 0 {
-			// If startOffset is 0, this is the TAIL consumer
-			// Only head consumer commits offsets
-			zap.S().Debug("GROUP=", c.group, ",TOPIC=", c.topicName, ",PARTITION=", topicMsg.Partition, ",OFFSET=", topicMsg.Offset, " - Committing offset")
-			sess.MarkMessage(topicMsg, "")
-		}
+		zap.S().Info("GROUP=", c.group, ",TOPIC=", c.topicName, ",PARTITION=", topicMsg.Partition, ",OFFSET=", topicMsg.Offset, " - New message")
+		sess.MarkMessage(topicMsg, "")
 
 		// Broadcast
 		c.topicChan <- topicMsg

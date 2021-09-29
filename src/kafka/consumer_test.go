@@ -17,7 +17,7 @@ func init() {
 
 func TestStartWorkerConsumers(t *testing.T) {
 
-	topicName := "logs"
+	topicName := "blocks"
 
 	// Mock broker
 	mockBrokerID := int32(1)
