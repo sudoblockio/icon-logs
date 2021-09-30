@@ -46,10 +46,10 @@ func startKafkaTopicConsumers(topicName string) {
 	}
 
 	zap.S().Info("kafkaBroker=", kafkaBroker, " consumerTopics=", topicName, " consumerGroup=", consumerGroupHead, " - Starting Consumers")
-	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroup+"-HEAD", sarama.OffsetOldest)
+	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroupHead, sarama.OffsetOldest)
 
 	zap.S().Info("kafkaBroker=", kafkaBroker, " consumerTopics=", topicName, " consumerGroup=", consumerGroupTail, " - Starting Consumers")
-	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroup+"-TAIL", sarama.OffsetOldest)
+	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroupTail, sarama.OffsetOldest)
 }
 
 func (k *kafkaTopicConsumer) consumeGroup(group string, startOffset int64) {
