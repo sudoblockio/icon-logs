@@ -32,7 +32,8 @@ func StartWorkerConsumers() {
 
 func startKafkaTopicConsumers(topicName string) {
 	kafkaBroker := config.Config.KafkaBrokerURL
-	consumerGroup := config.Config.ConsumerGroup
+	consumerGroupHead := config.Config.ConsumerGroupHead
+	consumerGroupTail := config.Config.ConsumerGroupTail
 
 	if KafkaTopicConsumers == nil {
 		KafkaTopicConsumers = make(map[string]*kafkaTopicConsumer)
@@ -44,13 +45,11 @@ func startKafkaTopicConsumers(topicName string) {
 		make(chan *sarama.ConsumerMessage),
 	}
 
-	zap.S().Info("kafkaBroker=", kafkaBroker, " consumerTopics=", topicName, " consumerGroup=", consumerGroup, " - Starting Consumers")
-
-	// Start from last read message
+	zap.S().Info("kafkaBroker=", kafkaBroker, " consumerTopics=", topicName, " consumerGroup=", consumerGroupHead, " - Starting Consumers")
 	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroup+"-HEAD", sarama.OffsetOldest)
 
-	// Start from 0 always
-	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroup+"-TAIL", 0)
+	zap.S().Info("kafkaBroker=", kafkaBroker, " consumerTopics=", topicName, " consumerGroup=", consumerGroupTail, " - Starting Consumers")
+	go KafkaTopicConsumers[topicName].consumeGroup(consumerGroup+"-TAIL", sarama.OffsetOldest)
 }
 
 func (k *kafkaTopicConsumer) consumeGroup(group string, startOffset int64) {
@@ -140,14 +139,16 @@ type ClaimConsumer struct {
 
 func (c *ClaimConsumer) Setup(sess sarama.ConsumerGroupSession) error {
 
-	// Reset offsets
-	if c.startOffset == 0 {
-		partitions := sess.Claims()[c.topicName]
+	/*
+		// Reset offsets
+		if c.startOffset == 0 {
+			partitions := sess.Claims()[c.topicName]
 
-		for _, p := range partitions {
-			sess.ResetOffset(c.topicName, p, 0, "reset")
+			for _, p := range partitions {
+				sess.ResetOffset(c.topicName, p, 0, "reset")
+			}
 		}
-	}
+	*/
 
 	return nil
 }
@@ -159,9 +160,8 @@ func (c *ClaimConsumer) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sar
 		select {
 		case msg := <-claim.Messages():
 			if msg == nil {
-				zap.S().Warn("GROUP=", c.group, ",TOPIC=", c.topicName, " - Kafka message is nil, waiting 5 seconds...")
-				time.Sleep(5 * time.Second)
-				continue
+				zap.S().Warn("GROUP=", c.group, ",TOPIC=", c.topicName, " - Kafka message is nil, exiting ConsumeClaim loop...")
+				return nil
 			}
 			topicMsg = msg
 		case <-time.After(5 * time.Second):
