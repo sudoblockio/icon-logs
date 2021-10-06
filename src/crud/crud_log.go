@@ -76,6 +76,7 @@ func (m *LogModel) SelectMany(
 	blockEndNumber uint32,
 	transactionHash string,
 	scoreAddress string,
+	method string,
 ) (*[]models.Log, int64, error) {
 	db := m.db
 	computeCount := false
@@ -114,6 +115,11 @@ func (m *LogModel) SelectMany(
 	if scoreAddress != "" {
 		// NOTE: addresses many have large counts, use log_count_by_addresses
 		db = db.Where("address = ?", scoreAddress)
+	}
+
+	// Method
+	if method != "" {
+		db = db.Where("method = ?", method)
 	}
 
 	// Count, if needed

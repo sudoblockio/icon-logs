@@ -20,5 +20,5 @@ message Log {
   string block_hash = 11;
   string item_id = 12;
   string item_timestamp = 13;
-  string method = 14;
+  string method = 14 [(gorm.field).tag = {index: "log_idx_method"}];
 }

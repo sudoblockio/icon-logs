@@ -21,6 +21,7 @@ type LogsQuery struct {
 
 	TransactionHash string `query:"transaction_hash"`
 	ScoreAddress    string `query:"score_address"`
+	Method          string `query:"method"`
 }
 
 func LogsAddHandlers(app *fiber.App) {
@@ -44,6 +45,7 @@ func LogsAddHandlers(app *fiber.App) {
 // @Param block_end_number query int false "block end number"
 // @Param transaction_hash query string false "find by transaction hash"
 // @Param score_address query string false "find by score address"
+// @Param method query string false "find by method"
 // @Router /api/v1/logs [get]
 // @Success 200 {object} []models.Log
 // @Failure 422 {object} map[string]interface{}
@@ -84,6 +86,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		params.BlockEndNumber,
 		params.TransactionHash,
 		params.ScoreAddress,
+		params.Method,
 	)
 	if err != nil {
 		zap.S().Warnf("Logs CRUD ERROR: %s", err.Error())
