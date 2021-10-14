@@ -21,7 +21,7 @@ x-env: &env
   LOG_LEVEL: "DEBUG"
   LOG_TO_FILE: "false"
   LOG_FILE_NAME: "logs.log"
-  LOG_FORMAT: "string"
+  LOG_FORMAT: "json"
 
   # Kafka
   KAFKA_BROKER_URL: "kafka:9092"
