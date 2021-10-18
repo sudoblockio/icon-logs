@@ -144,7 +144,7 @@ func StartLogCountByAddressLoader() {
 				// Insert
 				err = GetLogCountByAddressModel().Insert(newLogCountByAddress)
 				if err != nil {
-					zap.S().Fatal(err.Error())
+					zap.S().Warn(err.Error())
 				}
 
 				zap.S().Debug("Loader=LogCountByAddress, TransactionHash=", newLogCountByAddress.TransactionHash, " LogIndex=", newLogCountByAddress.LogIndex, " - Insert")

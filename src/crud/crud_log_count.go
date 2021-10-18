@@ -138,7 +138,7 @@ func StartLogCountLoader() {
 				// Insert
 				err = GetLogCountModel().Insert(newLogCount)
 				if err != nil {
-					zap.S().Fatal(err.Error())
+					zap.S().Warn(err.Error())
 				}
 
 				zap.S().Debug("Loader=LogCount, TransactionHash=", newLogCount.TransactionHash, " LogIndex=", newLogCount.LogIndex, " - Insert")

@@ -100,12 +100,15 @@ func StartLogWebsocketIndexLoader() {
 				LogIndex:        newLogWebsocket.LogIndex,
 			}
 
-			// Update/Insert
+			// Insert
 			_, err := GetLogWebsocketIndexModel().SelectOne(newLogWebsocketIndex.TransactionHash, newLogWebsocketIndex.LogIndex)
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 
 				// Insert
-				GetLogWebsocketIndexModel().Insert(newLogWebsocketIndex)
+				err = GetLogWebsocketIndexModel().Insert(newLogWebsocketIndex)
+				if err != nil {
+					zap.S().Warn(err)
+				}
 
 				// Publish to redis
 				newLogWebsocketJSON, _ := json.Marshal(newLogWebsocket)
