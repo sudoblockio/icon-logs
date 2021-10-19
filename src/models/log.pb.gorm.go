@@ -31,7 +31,7 @@ type LogORM struct {
 	ItemTimestamp    string
 	LogIndex         uint64 `gorm:"primary_key"`
 	MaxLogIndex      uint64
-	Method           string
+	Method           string `gorm:"index:log_idx_method"`
 	TransactionHash  string `gorm:"primary_key"`
 	TransactionIndex uint32
 	Type             string
@@ -252,7 +252,7 @@ func DefaultListLog(ctx context.Context, db *gorm1.DB) ([]*Log, error) {
 		}
 	}
 	db = db.Where(&ormObj)
-	db = db.Order("log_index")
+	db = db.Order("transaction_hash")
 	ormResponse := []LogORM{}
 	if err := db.Find(&ormResponse).Error; err != nil {
 		return nil, err
