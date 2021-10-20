@@ -107,7 +107,7 @@ func StartLogWebsocketIndexLoader() {
 				// Insert
 				err = GetLogWebsocketIndexModel().Insert(newLogWebsocketIndex)
 				if err != nil {
-					zap.S().Warn(err)
+					zap.S().Warn("Loader=LogWebsocketIndex, TransactionHash=", newLogWebsocket.TransactionHash, " LogIndex=", newLogWebsocket.LogIndex, " - Error: ", err.Error())
 				}
 
 				// Publish to redis
