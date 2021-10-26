@@ -115,7 +115,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	} else {
 		// No filters given, count all
 		// Total count in the log_counts table
-		counter, err := crud.GetLogCountModel().SelectLargestCount()
+		counter, err := crud.GetLogCountModel().SelectCount("log")
 		if err != nil {
 			counter = 0
 			zap.S().Warn("Could not retrieve log count: ", err.Error())

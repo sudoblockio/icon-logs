@@ -2,15 +2,18 @@ package crud
 
 import (
 	"errors"
+	"reflect"
 	"sync"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/geometry-labs/icon-logs/models"
+	"github.com/geometry-labs/icon-logs/redis"
 )
 
-// LogCountModel - type for log table model
+// LogCountModel - type for address table model
 type LogCountModel struct {
 	db            *gorm.DB
 	model         *models.LogCount
@@ -21,7 +24,7 @@ type LogCountModel struct {
 var logCountModel *LogCountModel
 var logCountModelOnce sync.Once
 
-// GetLogModel - create and/or return the logs table model
+// GetAddressModel - create and/or return the addresss table model
 func GetLogCountModel() *LogCountModel {
 	logCountModelOnce.Do(func() {
 		dbConn := getPostgresConn()
@@ -53,70 +56,59 @@ func (m *LogCountModel) Migrate() error {
 	return err
 }
 
-// Insert - Insert logCount into table
-func (m *LogCountModel) Insert(logCount *models.LogCount) error {
-	db := m.db
-
-	// Set table
-	db = db.Model(&models.LogCount{})
-
-	db = db.Create(logCount)
-
-	return db.Error
-}
-
 // Select - select from logCounts table
-func (m *LogCountModel) SelectOne(transactionHash string, logIndex uint64) (models.LogCount, error) {
+func (m *LogCountModel) SelectOne(_type string) (*models.LogCount, error) {
 	db := m.db
 
 	// Set table
 	db = db.Model(&models.LogCount{})
 
-	logCount := models.LogCount{}
+	// Address
+	db = db.Where("type = ?", _type)
 
-	// Transaction Hash
-	db = db.Where("transaction_hash = ?", transactionHash)
-
-	// Log Index
-	db = db.Where("log_index = ?", logIndex)
-
-	db = db.First(&logCount)
+	logCount := &models.LogCount{}
+	db = db.First(logCount)
 
 	return logCount, db.Error
 }
 
-func (m *LogCountModel) SelectLargestCount() (uint64, error) {
-
+// Select - select from logCounts table
+func (m *LogCountModel) SelectCount(_type string) (uint64, error) {
 	db := m.db
-	//computeCount := false
 
 	// Set table
 	db = db.Model(&models.LogCount{})
 
-	// Get max id
+	// Address
+	db = db.Where("type = ?", _type)
+
+	logCount := &models.LogCount{}
+	db = db.First(logCount)
+
 	count := uint64(0)
-	row := db.Select("max(id)").Row()
-	row.Scan(&count)
+	if logCount != nil {
+		count = logCount.Count
+	}
 
 	return count, db.Error
 }
 
-func (m *LogCountModel) Update(logCount *models.LogCount) error {
-
+func (m *LogCountModel) UpsertOne(
+	logCount *models.LogCount,
+) error {
 	db := m.db
-	//computeCount := false
 
-	// Set table
-	db = db.Model(&models.LogCount{})
+	// map[string]interface{}
+	updateOnConflictValues := extractFilledFieldsFromModel(
+		reflect.ValueOf(*logCount),
+		reflect.TypeOf(*logCount),
+	)
 
-	// Transaction Hash
-	db = db.Where("transaction_hash = ?", logCount.TransactionHash)
-
-	// Log Index
-	db = db.Where("log_index = ?", logCount.LogIndex)
-
-	// Update
-	db = db.Save(logCount)
+	// Upsert
+	db = db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "type"}}, // NOTE set to primary keys for table
+		DoUpdates: clause.Assignments(updateOnConflictValues),
+	}).Create(logCount)
 
 	return db.Error
 }
@@ -124,27 +116,102 @@ func (m *LogCountModel) Update(logCount *models.LogCount) error {
 // StartLogCountLoader starts loader
 func StartLogCountLoader() {
 	go func() {
+		postgresLoaderChan := GetLogCountModel().LoaderChannel
 
 		for {
-			// Read logCount
-			newLogCount := <-GetLogCountModel().LoaderChannel
+			// Read log
+			newLogCount := <-postgresLoaderChan
 
-			// Insert
-			_, err := GetLogCountModel().SelectOne(
-				newLogCount.TransactionHash,
-				newLogCount.LogIndex,
-			)
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// Insert
-				err = GetLogCountModel().Insert(newLogCount)
-				if err != nil {
-					zap.S().Warn("Loader=LogCount, TransactionHash=", newLogCount.TransactionHash, " LogIndex=", newLogCount.LogIndex, " - Error: ", err.Error())
+			//////////////////////////
+			// Get count from redis //
+			//////////////////////////
+			countKey := "log_count_" + newLogCount.Type
+
+			count, err := redis.GetRedisClient().GetCount(countKey)
+			if err != nil {
+				zap.S().Fatal(
+					"Loader=Log,",
+					" Transaction Hash =", newLogCount.TransactionHash,
+					" Log Index =", newLogCount.LogIndex,
+					" Type=", newLogCount.Type,
+					" - Error: ", err.Error())
+			}
+
+			// No count set yet
+			// Get from database
+			if count == -1 {
+				curLogCount, err := GetLogCountModel().SelectOne(newLogCount.Type)
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					count = 0
+				} else if err != nil {
+					zap.S().Fatal(
+						"Loader=Log,",
+						" Transaction Hash =", newLogCount.TransactionHash,
+						" Log Index =", newLogCount.LogIndex,
+						" Type=", newLogCount.Type,
+						" - Error: ", err.Error())
+				} else {
+					count = int64(curLogCount.Count)
 				}
 
-				zap.S().Debug("Loader=LogCount, TransactionHash=", newLogCount.TransactionHash, " LogIndex=", newLogCount.LogIndex, " - Insert")
-			} else if err != nil {
-				// Error
-				zap.S().Fatal(err.Error())
+				// Set count
+				err = redis.GetRedisClient().SetCount(countKey, int64(count))
+				if err != nil {
+					// Redis error
+					zap.S().Fatal(
+						"Loader=Log,",
+						" Transaction Hash =", newLogCount.TransactionHash,
+						" Log Index =", newLogCount.LogIndex,
+						" Type=", newLogCount.Type,
+						" - Error: ", err.Error())
+				}
+			}
+
+			//////////////////////
+			// Load to postgres //
+			//////////////////////
+
+			// Add log to indexed
+			if newLogCount.Type == "log" {
+				newLogCountIndex := &models.LogCountIndex{
+					TransactionHash: newLogCount.TransactionHash,
+					LogIndex:        newLogCount.LogIndex,
+				}
+				err = GetLogCountIndexModel().Insert(newLogCountIndex)
+				if err != nil {
+					// Record already exists, continue
+					continue
+				}
+			}
+
+			// Increment records
+			count, err = redis.GetRedisClient().IncCount(countKey)
+			if err != nil {
+				// Redis error
+				zap.S().Fatal(
+					"Loader=Log,",
+					" Transaction Hash =", newLogCount.TransactionHash,
+					" Log Index =", newLogCount.LogIndex,
+					" Type=", newLogCount.Type,
+					" - Error: ", err.Error())
+			}
+			newLogCount.Count = uint64(count)
+
+			err = GetLogCountModel().UpsertOne(newLogCount)
+			zap.S().Debug(
+				"Loader=Log,",
+				" Transaction Hash =", newLogCount.TransactionHash,
+				" Log Index =", newLogCount.LogIndex,
+				" Type=", newLogCount.Type,
+				" - Upsert")
+			if err != nil {
+				// Postgres error
+				zap.S().Fatal(
+					"Loader=Log,",
+					" Transaction Hash =", newLogCount.TransactionHash,
+					" Log Index =", newLogCount.LogIndex,
+					" Type=", newLogCount.Type,
+					" - Error: ", err.Error())
 			}
 		}
 	}()
