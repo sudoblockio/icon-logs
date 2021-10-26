@@ -105,7 +105,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		c.Append("X-TOTAL-COUNT", strconv.FormatInt(count, 10))
 	} else if count == -1 && params.ScoreAddress != "" {
 		// Use Log count by address for count
-		counter, err := crud.GetLogCountByAddressModel().SelectLargestCountByAddress(params.ScoreAddress)
+		counter, err := crud.GetLogCountByAddressModel().SelectCount(params.ScoreAddress)
 		if err != nil {
 			counter = 0
 			zap.S().Warn("Could not retrieve log count by address: ", params.ScoreAddress, " Error: ", err.Error())

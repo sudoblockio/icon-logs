@@ -2,15 +2,18 @@ package crud
 
 import (
 	"errors"
+	"reflect"
 	"sync"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/geometry-labs/icon-logs/models"
+	"github.com/geometry-labs/icon-logs/redis"
 )
 
-// LogCountByAddressModel - type for logCountByAddress table model
+// LogCountByAddressModel - type for address table model
 type LogCountByAddressModel struct {
 	db            *gorm.DB
 	model         *models.LogCountByAddress
@@ -21,7 +24,7 @@ type LogCountByAddressModel struct {
 var logCountByAddressModel *LogCountByAddressModel
 var logCountByAddressModelOnce sync.Once
 
-// GetLogCountByAddressModel - create and/or return the logCountByAddresss table model
+// GetAddressModel - create and/or return the addresss table model
 func GetLogCountByAddressModel() *LogCountByAddressModel {
 	logCountByAddressModelOnce.Do(func() {
 		dbConn := getPostgresConn()
@@ -49,28 +52,13 @@ func GetLogCountByAddressModel() *LogCountByAddressModel {
 // Migrate - migrate logCountByAddresss table
 func (m *LogCountByAddressModel) Migrate() error {
 	// Only using LogCountByAddressRawORM (ORM version of the proto generated struct) to create the TABLE
-	zap.S().Info("Migrating LogCountByAddressModel....")
 	err := m.db.AutoMigrate(m.modelORM) // Migration and Index creation
 	return err
 }
 
-// Insert - Insert logCountByAddress into table
-func (m *LogCountByAddressModel) Insert(logCountByAddress *models.LogCountByAddress) error {
-
+// Select - select from logCountByAddresss table
+func (m *LogCountByAddressModel) SelectOne(address string) (*models.LogCountByAddress, error) {
 	db := m.db
-
-	// Set table
-	db = db.Model(&models.LogCountByAddress{})
-
-	db = db.Create(logCountByAddress)
-
-	return db.Error
-}
-
-func (m *LogCountByAddressModel) SelectLargestCountByAddress(address string) (uint64, error) {
-
-	db := m.db
-	//computeCount := false
 
 	// Set table
 	db = db.Model(&models.LogCountByAddress{})
@@ -78,51 +66,49 @@ func (m *LogCountByAddressModel) SelectLargestCountByAddress(address string) (ui
 	// Address
 	db = db.Where("address = ?", address)
 
-	// Get max count
-	count := uint64(0)
-	row := db.Select("max(id)").Row()
-	row.Scan(&count)
-
-	return count, db.Error
-}
-
-func (m *LogCountByAddressModel) SelectOne(transactionHash string, logIndex uint64) (*models.LogCountByAddress, error) {
-
-	db := m.db
-	//computeCount := false
-
-	// Set table
-	db = db.Model(&models.LogCountByAddress{})
-
-	// Transaction Hash
-	db = db.Where("transaction_hash = ?", transactionHash)
-
-	// Log Index
-	db = db.Where("log_index = ?", logIndex)
-
-	// Select
 	logCountByAddress := &models.LogCountByAddress{}
 	db = db.First(logCountByAddress)
 
 	return logCountByAddress, db.Error
 }
 
-func (m *LogCountByAddressModel) Update(logCountByAddress *models.LogCountByAddress) error {
-
+// Select - select from logCountByAddresss table
+func (m *LogCountByAddressModel) SelectCount(address string) (uint64, error) {
 	db := m.db
-	//computeCount := false
 
 	// Set table
 	db = db.Model(&models.LogCountByAddress{})
 
-	// Transaction Hash
-	db = db.Where("transaction_hash = ?", logCountByAddress.TransactionHash)
+	// Address
+	db = db.Where("address = ?", address)
 
-	// Log Index
-	db = db.Where("log_index = ?", logCountByAddress.LogIndex)
+	logCountByAddress := &models.LogCountByAddress{}
+	db = db.First(logCountByAddress)
 
-	// Update
-	db = db.Save(logCountByAddress)
+	count := uint64(0)
+	if logCountByAddress != nil {
+		count = logCountByAddress.Count
+	}
+
+	return count, db.Error
+}
+
+func (m *LogCountByAddressModel) UpsertOne(
+	logCountByAddress *models.LogCountByAddress,
+) error {
+	db := m.db
+
+	// map[string]interface{}
+	updateOnConflictValues := extractFilledFieldsFromModel(
+		reflect.ValueOf(*logCountByAddress),
+		reflect.TypeOf(*logCountByAddress),
+	)
+
+	// Upsert
+	db = db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "address"}}, // NOTE set to primary keys for table
+		DoUpdates: clause.Assignments(updateOnConflictValues),
+	}).Create(logCountByAddress)
 
 	return db.Error
 }
@@ -130,27 +116,98 @@ func (m *LogCountByAddressModel) Update(logCountByAddress *models.LogCountByAddr
 // StartLogCountByAddressLoader starts loader
 func StartLogCountByAddressLoader() {
 	go func() {
+		postgresLoaderChan := GetLogCountByAddressModel().LoaderChannel
 
 		for {
-			// Read transaction
-			newLogCountByAddress := <-GetLogCountByAddressModel().LoaderChannel
+			// Read log
+			newLogCountByAddress := <-postgresLoaderChan
 
-			// Insert
-			_, err := GetLogCountByAddressModel().SelectOne(
-				newLogCountByAddress.TransactionHash,
-				newLogCountByAddress.LogIndex,
-			)
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// Insert
-				err = GetLogCountByAddressModel().Insert(newLogCountByAddress)
-				if err != nil {
-					zap.S().Warn("Loader=LogCountByAddress, TransactionHash=", newLogCountByAddress.TransactionHash, " LogIndex=", newLogCountByAddress.LogIndex, " - Error: ", err.Error())
+			//////////////////////////
+			// Get count from redis //
+			//////////////////////////
+			countKey := "log_count_by_address_" + newLogCountByAddress.Address
+
+			count, err := redis.GetRedisClient().GetCount(countKey)
+			if err != nil {
+				zap.S().Fatal(
+					"Loader=Log",
+					" Transaction Hash=", newLogCountByAddress.TransactionHash,
+					" Log Index=", newLogCountByAddress.LogIndex,
+					" Address=", newLogCountByAddress.Address,
+					" - Error: ", err.Error())
+			}
+
+			// No count set yet
+			// Get from database
+			if count == -1 {
+				curLogCountByAddress, err := GetLogCountByAddressModel().SelectOne(newLogCountByAddress.Address)
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					count = 0
+				} else if err != nil {
+					zap.S().Fatal(
+						"Loader=Log",
+						" Transaction Hash=", newLogCountByAddress.TransactionHash,
+						" Log Index=", newLogCountByAddress.LogIndex,
+						" Address=", newLogCountByAddress.Address,
+						" - Error: ", err.Error())
+				} else {
+					count = int64(curLogCountByAddress.Count)
 				}
 
-				zap.S().Debug("Loader=LogCountByAddress, TransactionHash=", newLogCountByAddress.TransactionHash, " LogIndex=", newLogCountByAddress.LogIndex, " - Insert")
-			} else if err != nil {
-				// Error
-				zap.S().Fatal(err.Error())
+				// Set count
+				err = redis.GetRedisClient().SetCount(countKey, int64(count))
+				if err != nil {
+					// Redis error
+
+					zap.S().Fatal(
+						"Loader=Log",
+						" Transaction Hash=", newLogCountByAddress.TransactionHash,
+						" Log Index=", newLogCountByAddress.LogIndex,
+						" Address=", newLogCountByAddress.Address,
+						" - Error: ", err.Error())
+				}
+			}
+
+			//////////////////////
+			// Load to postgres //
+			//////////////////////
+
+			// Add log to indexed
+			newLogCountByAddressIndex := &models.LogCountByAddressIndex{
+				TransactionHash: newLogCountByAddress.TransactionHash,
+				LogIndex:        newLogCountByAddress.LogIndex,
+			}
+			err = GetLogCountByAddressIndexModel().Insert(newLogCountByAddressIndex)
+			if err != nil {
+				// Record already exists, continue
+				continue
+			}
+
+			// Increment records
+			count, err = redis.GetRedisClient().IncCount(countKey)
+			if err != nil {
+				// Redis error
+
+				zap.S().Fatal(
+					"Loader=Log",
+					" Transaction Hash=", newLogCountByAddress.TransactionHash,
+					" Log Index=", newLogCountByAddress.LogIndex,
+					" Address=", newLogCountByAddress.Address,
+					" - Error: ", err.Error())
+			}
+			newLogCountByAddress.Count = uint64(count)
+
+			err = GetLogCountByAddressModel().UpsertOne(newLogCountByAddress)
+			zap.S().Debug("Loader=Log, Hash=", newLogCountByAddress.TransactionHash, " Address=", newLogCountByAddress.Address, " - Upserted")
+			if err != nil {
+				// Postgres error
+
+				zap.S().Fatal(
+					"Loader=Log",
+					" Transaction Hash=", newLogCountByAddress.TransactionHash,
+					" Log Index=", newLogCountByAddress.LogIndex,
+					" Address=", newLogCountByAddress.Address,
+					" - Error: ", err.Error())
 			}
 		}
 	}()

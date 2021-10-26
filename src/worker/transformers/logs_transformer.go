@@ -133,6 +133,7 @@ func transformLogToLogWS(log *models.Log) *models.LogWebsocket {
 
 func transformLogToLogCount(log *models.Log) *models.LogCount {
 	return &models.LogCount{
+		Type:            "log",
 		TransactionHash: log.TransactionHash,
 		LogIndex:        log.LogIndex,
 	}

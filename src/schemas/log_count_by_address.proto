@@ -7,11 +7,8 @@ import "github.com/infobloxopen/protoc-gen-gorm/options/gorm.proto";
 message LogCountByAddress {
   option (gorm.opts) = {ormable: true};
 
-  uint64 log_index = 1 [(gorm.field).tag = {index: "log_count_by_address_idx_log_index"}];
-  string transaction_hash = 2 [(gorm.field).tag = {index: "log_count_by_address_idx_transaction_hash"}];
-  string address = 3 [(gorm.field).tag = {index: "log_count_by_address_idx_address"}];
-
-  // Postgres primary key
-  // Use as count
-  uint64 id = 5;
+  string address = 1 [(gorm.field).tag = {primary_key: true}];
+  string transaction_hash = 2;
+  uint64 log_index = 3;
+  uint64 count = 4 [(gorm.field).tag = {index: "log_count_by_address_idx_count"}];
 }
