@@ -125,7 +125,7 @@ func StartLogCountLoader() {
 			//////////////////////////
 			// Get count from redis //
 			//////////////////////////
-			countKey := "log_count_" + newLogCount.Type
+			countKey := "icon_logs_log_count_" + newLogCount.Type
 
 			count, err := redis.GetRedisClient().GetCount(countKey)
 			if err != nil {

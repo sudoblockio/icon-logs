@@ -125,7 +125,7 @@ func StartLogCountByAddressLoader() {
 			//////////////////////////
 			// Get count from redis //
 			//////////////////////////
-			countKey := "log_count_by_address_" + newLogCountByAddress.Address
+			countKey := "icon_logs_log_count_by_address_" + newLogCountByAddress.Address
 
 			count, err := redis.GetRedisClient().GetCount(countKey)
 			if err != nil {
