@@ -15,10 +15,7 @@ type LogsQuery struct {
 	Limit int `query:"limit"`
 	Skip  int `query:"skip"`
 
-	BlockNumber      uint32 `query:"block_number"`
-	BlockStartNumber uint32 `query:"block_start_number"`
-	BlockEndNumber   uint32 `query:"block_end_number"`
-
+	BlockNumber     uint32 `query:"block_number"`
 	TransactionHash string `query:"transaction_hash"`
 	ScoreAddress    string `query:"score_address"`
 	Method          string `query:"method"`
@@ -68,22 +65,12 @@ func handlerGetLogs(c *fiber.Ctx) error {
 		c.Status(422)
 		return c.SendString(`{"error": "limit must be greater than 0 and less than 101"}`)
 	}
-	if params.BlockEndNumber < params.BlockStartNumber {
-		c.Status(422)
-		return c.SendString(`{"error": "end_number is less than start_number"}`)
-	}
-	if params.BlockEndNumber-params.BlockStartNumber > 1000 {
-		c.Status(422)
-		return c.SendString(`{"error": "block range is too big, max is 1,000"}`)
-	}
 
 	// Get Logs
 	logs, count, err := crud.GetLogModel().SelectMany(
 		params.Limit,
 		params.Skip,
 		params.BlockNumber,
-		params.BlockStartNumber,
-		params.BlockEndNumber,
 		params.TransactionHash,
 		params.ScoreAddress,
 		params.Method,
