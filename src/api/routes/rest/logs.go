@@ -67,7 +67,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Get Logs
-	logs, count, err := crud.GetLogModel().SelectMany(
+	logs, err := crud.GetLogModel().SelectMany(
 		params.Limit,
 		params.Skip,
 		params.BlockNumber,
@@ -87,10 +87,7 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Set X-TOTAL-COUNT
-	if count != -1 {
-		// Filters given, count some
-		c.Append("X-TOTAL-COUNT", strconv.FormatInt(count, 10))
-	} else if count == -1 && params.ScoreAddress != "" {
+	if params.ScoreAddress != "" {
 		// Use Log count by address for count
 		counter, err := crud.GetLogCountByAddressModel().SelectCount(params.ScoreAddress)
 		if err != nil {

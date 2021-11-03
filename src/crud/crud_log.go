@@ -67,7 +67,7 @@ func (m *LogModel) Insert(log *models.Log) error {
 }
 
 // Select - select from logs table
-// Returns: models, total count (if filters), error (if present)
+// Returns: models, error (if present)
 func (m *LogModel) SelectMany(
 	limit int,
 	skip int,
@@ -75,9 +75,8 @@ func (m *LogModel) SelectMany(
 	transactionHash string,
 	scoreAddress string,
 	method string,
-) (*[]models.Log, int64, error) {
+) (*[]models.Log, error) {
 	db := m.db
-	computeCount := false
 
 	// Set table
 	db = db.Model(&models.Log{})
@@ -87,19 +86,16 @@ func (m *LogModel) SelectMany(
 
 	// Number
 	if blockNumber != 0 {
-		computeCount = true
 		db = db.Where("block_number = ?", blockNumber)
 	}
 
 	// Hash
 	if transactionHash != "" {
-		computeCount = true
 		db = db.Where("transaction_hash = ?", transactionHash)
 	}
 
 	// Address
 	if scoreAddress != "" {
-		// NOTE: addresses many have large counts, use log_count_by_addresses
 		db = db.Where("address = ?", scoreAddress)
 	}
 
@@ -108,18 +104,10 @@ func (m *LogModel) SelectMany(
 		db = db.Where("method = ?", method)
 	}
 
-	// Count, if needed
-	count := int64(-1)
-	if computeCount {
-		db.Count(&count)
-	}
-
 	// Limit is required and defaulted to 1
-	// Note: Count before setting limit
 	db = db.Limit(limit)
 
 	// Skip
-	// Note: Count before setting skip
 	if skip != 0 {
 		db = db.Offset(skip)
 	}
@@ -127,7 +115,7 @@ func (m *LogModel) SelectMany(
 	logs := &[]models.Log{}
 	db = db.Find(logs)
 
-	return logs, count, db.Error
+	return logs, db.Error
 }
 
 func (m *LogModel) SelectOne(
