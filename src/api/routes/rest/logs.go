@@ -38,8 +38,6 @@ func LogsAddHandlers(app *fiber.App) {
 // @Param limit query int false "amount of records"
 // @Param skip query int false "skip to a record"
 // @Param block_number query int false "skip to a record"
-// @Param block_start_number query int false "block start number"
-// @Param block_end_number query int false "block end number"
 // @Param transaction_hash query string false "find by transaction hash"
 // @Param score_address query string false "find by score address"
 // @Param method query string false "find by method"
