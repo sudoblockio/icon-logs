@@ -72,6 +72,27 @@ func (m *LogCountByAddressModel) SelectOne(address string) (*models.LogCountByAd
 	return logCountByAddress, db.Error
 }
 
+// SelectMany - select from logCountByAddresss table
+func (m *LogCountByAddressModel) SelectMany(limit int, skip int) (*[]models.LogCountByAddress, error) {
+	db := m.db
+
+	// Set table
+	db = db.Model(&[]models.LogCountByAddress{})
+
+	// Limit
+	db = db.Limit(limit)
+
+	// Skip
+	if skip != 0 {
+		db = db.Offset(skip)
+	}
+
+	logCountByAddresses := &[]models.LogCountByAddress{}
+	db = db.Find(logCountByAddresses)
+
+	return logCountByAddresses, db.Error
+}
+
 // Select - select from logCountByAddresss table
 func (m *LogCountByAddressModel) SelectCount(address string) (uint64, error) {
 	db := m.db

@@ -50,6 +50,21 @@ func (m *LogCountIndexModel) Migrate() error {
 	return err
 }
 
+// Count - count all entries in log_count_indices table
+// NOTE this function will take a long time
+func (m *LogCountIndexModel) Count() (int64, error) {
+	db := m.db
+
+	// Set table
+	db = db.Model(&models.LogCountIndex{})
+
+	// Count
+	var count int64
+	db = db.Count(&count)
+
+	return count, db.Error
+}
+
 // Insert - Insert logCountByIndex into table
 func (m *LogCountIndexModel) Insert(logCountIndex *models.LogCountIndex) error {
 	db := m.db
