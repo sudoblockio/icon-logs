@@ -137,6 +137,24 @@ func (m *LogModel) SelectOne(
 	return log, db.Error
 }
 
+// CountByAddress - Count logs by address
+// NOTE this function may take very long for some addresses
+func (m *LogModel) CountByAddress(address string) (int64, error) {
+	db := m.db
+
+	// Set table
+	db = db.Model(&models.Log{})
+
+	// Address
+	db = db.Where("address = ?", address)
+
+	// Count
+	var count int64
+	db = db.Count(&count)
+
+	return count, db.Error
+}
+
 // UpdateOne - select from logs table
 func (m *LogModel) UpdateOne(
 	log *models.Log,

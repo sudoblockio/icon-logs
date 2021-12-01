@@ -46,7 +46,7 @@ func logCountByAddressRoutine(duration time.Duration) {
 				///////////
 				// Count //
 				///////////
-				count, err := crud.GetLogCountByAddressIndexModel().CountByAddress(a.Address)
+				count, err := crud.GetLogModel().CountByAddress(a.Address)
 				if err != nil {
 					// Postgres error
 					zap.S().Warn(err)
