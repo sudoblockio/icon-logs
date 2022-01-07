@@ -89,7 +89,13 @@ func handlerGetLogs(c *fiber.Ctx) error {
 	}
 
 	// Set X-TOTAL-COUNT
-	if params.ScoreAddress != "" {
+	if params.TransactionHash != "" {
+		if len(*logs) != 0 {
+			c.Append("X-TOTAL-COUNT", strconv.FormatUint((*logs)[0].MaxLogIndex, 10))
+		} else {
+			c.Append("X-TOTAL-COUNT", strconv.FormatUint(0, 10))
+		}
+	} else if params.ScoreAddress != "" {
 		// Use Log count by address for count
 		counter, err := crud.GetLogCountByAddressModel().SelectCount(params.ScoreAddress)
 		if err != nil {
