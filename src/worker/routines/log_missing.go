@@ -83,7 +83,7 @@ func logMissingRoutine(duration time.Duration) {
 			currentBlockNumber++
 		}
 
-		zap.S().Info("Completed routine, sleeping...")
+		zap.S().Info("Routine=LogMissing - Completed routine, sleeping...")
 		time.Sleep(duration)
 	}
 }

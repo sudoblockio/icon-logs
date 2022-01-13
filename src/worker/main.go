@@ -26,6 +26,7 @@ func main() {
 		// Start routines
 		routines.StartLogCountRoutine()
 		routines.StartLogCountByAddressRoutine()
+		routines.StartLogMissingRoutine()
 
 		global.WaitShutdownSig()
 	}
