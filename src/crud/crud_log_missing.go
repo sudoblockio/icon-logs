@@ -54,6 +54,30 @@ func (m *LogMissingModel) Migrate() error {
 	return err
 }
 
+func (m *LogMissingModel) FindMissing() (*[]models.LogMissing, error) {
+	db := m.db
+
+	logMissings := &[]models.LogMissing{}
+	db.Raw(`
+		SELECT
+			transaction_hash, block_number
+		FROM (
+			SELECT
+				transaction_hash,
+		  	count(transaction_hash) as num_logs,
+		    max(max_log_index) as max_logs,
+				max(block_number) as block_number
+		  FROM
+				logs
+		  GROUP BY
+				transaction_hash
+		) AS ml WHERE num_logs != max_logs;
+	`,
+	).Scan(&logMissings)
+
+	return logMissings, db.Error
+}
+
 func (m *LogMissingModel) UpsertOne(
 	logMissing *models.LogMissing,
 ) error {

@@ -21,6 +21,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 type LogMissingORM struct {
+	BlockNumber     uint64
 	TransactionHash string `gorm:"primary_key"`
 }
 
@@ -40,6 +41,7 @@ func (m *LogMissing) ToORM(ctx context.Context) (LogMissingORM, error) {
 		}
 	}
 	to.TransactionHash = m.TransactionHash
+	to.BlockNumber = m.BlockNumber
 	if posthook, ok := interface{}(m).(LogMissingWithAfterToORM); ok {
 		err = posthook.AfterToORM(ctx, &to)
 	}
@@ -57,6 +59,7 @@ func (m *LogMissingORM) ToPB(ctx context.Context) (LogMissing, error) {
 		}
 	}
 	to.TransactionHash = m.TransactionHash
+	to.BlockNumber = m.BlockNumber
 	if posthook, ok := interface{}(m).(LogMissingWithAfterToPB); ok {
 		err = posthook.AfterToPB(ctx, &to)
 	}
@@ -130,6 +133,10 @@ func DefaultApplyFieldMaskLogMissing(ctx context.Context, patchee *LogMissing, p
 	for _, f := range updateMask.Paths {
 		if f == prefix+"TransactionHash" {
 			patchee.TransactionHash = patcher.TransactionHash
+			continue
+		}
+		if f == prefix+"BlockNumber" {
+			patchee.BlockNumber = patcher.BlockNumber
 			continue
 		}
 	}

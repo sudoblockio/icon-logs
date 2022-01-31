@@ -8,4 +8,5 @@ message LogMissing {
   option (gorm.opts) = {ormable: true};
 
   string transaction_hash = 1 [(gorm.field).tag = {primary_key: true}];
+  uint64 block_number = 2;
 }
