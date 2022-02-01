@@ -18,14 +18,11 @@ func StartLogMissingRoutine() {
 
 func logMissingRoutine() {
 
+	zap.S().Info("Routine=LogMissing - Starting...")
+
 	missingLogs, err := crud.GetLogMissingModel().FindMissing()
 	if err != nil {
 		zap.S().Fatal(err.Error())
-	}
-
-	zap.S().Info("Routine=LogMissing - Found ", len(*missingLogs), " logs")
-	for i, _ := range *missingLogs {
-		crud.GetLogMissingModel().UpsertOne(&(*missingLogs)[i])
 	}
 
 	zap.S().Info("Routine=LogMissing - Finished")

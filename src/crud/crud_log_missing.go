@@ -54,13 +54,13 @@ func (m *LogMissingModel) Migrate() error {
 	return err
 }
 
-func (m *LogMissingModel) FindMissing() (*[]models.LogMissing, error) {
+func (m *LogMissingModel) FindMissing() error {
 	db := m.db
 
-	logMissings := &[]models.LogMissing{}
-	db.Raw(`
+	db.Exec(`
+		CREATE TABLE log_missing AS
 		SELECT
-			transaction_hash, block_number
+			transaction_hash, block_number, max_logs, num_logs
 		FROM (
 			SELECT
 				transaction_hash,
@@ -73,9 +73,9 @@ func (m *LogMissingModel) FindMissing() (*[]models.LogMissing, error) {
 				transaction_hash
 		) AS ml WHERE num_logs != max_logs;
 	`,
-	).Scan(&logMissings)
+	)
 
-	return logMissings, db.Error
+	return db.Error
 }
 
 func (m *LogMissingModel) UpsertOne(
