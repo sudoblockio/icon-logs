@@ -20,7 +20,7 @@ func logMissingRoutine() {
 
 	zap.S().Info("Routine=LogMissing - Starting...")
 
-	missingLogs, err := crud.GetLogMissingModel().FindMissing()
+	err := crud.GetLogMissingModel().FindMissing()
 	if err != nil {
 		zap.S().Fatal(err.Error())
 	}

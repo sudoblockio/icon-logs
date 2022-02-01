@@ -58,7 +58,7 @@ func (m *LogMissingModel) FindMissing() error {
 	db := m.db
 
 	db.Exec(`
-		CREATE TABLE log_missing AS
+		CREATE TABLE log_missing_by_block_number AS
 		SELECT
 			transaction_hash, block_number, max_logs, num_logs
 		FROM (
